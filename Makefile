@@ -133,7 +133,7 @@ vdr: $(OBJS) $(SILIB)
 # The libsi library:
 
 $(SILIB):
-	$(MAKE) --no-print-directory -C $(LSIDIR) CXXFLAGS="$(CXXFLAGS)" DEFINES="$(CDEFINES)" all
+	$(MAKE) -C $(LSIDIR) CXXFLAGS="$(CXXFLAGS)" DEFINES="$(CDEFINES)" all
 
 # pkg-config file:
 
@@ -213,12 +213,12 @@ plugins: include-dir vdr.pc
 	    if ! grep -q "PKGCFG" "$(PLUGINDIR)/src/$$i/Makefile" ; then\
 	       echo "WARNING: plugin $$i is using an old Makefile!";\
 	       oldmakefile="$$oldmakefile $$i";\
-	       $(MAKE) --no-print-directory -C "$(PLUGINDIR)/src/$$i" CFLAGS="$(CFLAGS) $(CDEFINES) $(CINCLUDES)" CXXFLAGS="$(CXXFLAGS) $(CDEFINES) $(CINCLUDES)" LIBDIR="$(PLUGINDIR)/lib" VDRDIR="$(CWD)" all || failed="$$failed $$i";\
+	       $(MAKE) -C "$(PLUGINDIR)/src/$$i" CFLAGS="$(CFLAGS) $(CDEFINES) $(CINCLUDES)" CXXFLAGS="$(CXXFLAGS) $(CDEFINES) $(CINCLUDES)" LIBDIR="$(PLUGINDIR)/lib" VDRDIR="$(CWD)" all || failed="$$failed $$i";\
 	       continue;\
 	       fi;\
 	    # New Makefile\
 	    INCLUDES="-I$(CWD)/include"\
-	    $(MAKE) --no-print-directory -C "$(PLUGINDIR)/src/$$i" VDRDIR="$(CWD)" || failed="$$failed $$i";\
+	    $(MAKE) -C "$(PLUGINDIR)/src/$$i" VDRDIR="$(CWD)" || failed="$$failed $$i";\
 	    if [ -n "$(LCLBLD)" ] ; then\
 	       (cd $(PLUGINDIR)/src/$$i; for l in `find -name 'libvdr-*.so' -o -name 'lib$$i-*.so'`; do install $$l $(LIBDIR)/`basename $$l`.$(APIVERSION); done);\
 	       if [ -d $(PLUGINDIR)/src/$$i/po ]; then\
@@ -242,7 +242,7 @@ plugins: include-dir vdr.pc
 	if [ -n "$$failed" ] ; then echo; echo "*** failed plugins:$$failed"; echo; exit 1; fi
 
 clean-plugins:
-	@for i in `ls $(PLUGINDIR)/src | grep -v '[^a-z0-9]'`; do $(MAKE) --no-print-directory -C "$(PLUGINDIR)/src/$$i" clean; done
+	@for i in `ls $(PLUGINDIR)/src | grep -v '[^a-z0-9]'`; do $(MAKE) -C "$(PLUGINDIR)/src/$$i" clean; done
 	@-rm -f $(PLUGINDIR)/lib/lib*-*.so.$(APIVERSION)
 
 # Install the files (note that 'install-pc' must be first!):
@@ -279,7 +279,7 @@ install-doc:
 
 install-plugins: plugins
 	@-for i in `ls $(PLUGINDIR)/src | grep -v '[^a-z0-9]'`; do\
-	      $(MAKE) --no-print-directory -C "$(PLUGINDIR)/src/$$i" VDRDIR=$(CWD) DESTDIR=$(DESTDIR) install;\
+	      $(MAKE) -C "$(PLUGINDIR)/src/$$i" VDRDIR=$(CWD) DESTDIR=$(DESTDIR) install;\
 	      done
 	@if [ -d $(PLUGINDIR)/lib ] ; then\
 	    for i in `find $(PLUGINDIR)/lib -name 'lib*-*.so.$(APIVERSION)'`; do\
@@ -312,7 +312,7 @@ srcdoc:
 # Housekeeping:
 
 clean:
-	@$(MAKE) --no-print-directory -C $(LSIDIR) clean
+	@$(MAKE) -C $(LSIDIR) clean
 	@-rm -f $(OBJS) $(DEPFILE) vdr vdr.pc core* *~
 	@-rm -rf $(LOCALEDIR) $(PODIR)/*.mo $(PODIR)/*.pot
 	@-rm -rf include
