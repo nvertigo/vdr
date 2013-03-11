@@ -211,6 +211,7 @@ private:
   cNonBlockingFileReader *nonBlockingFileReader;
   cRingBufferFrame *ringBuffer;
   cPtsIndex ptsIndex;
+  cMarks marks;
   cFileName *fileName;
   cIndexFile *index;
   cUnbufferedFile *replayFile;
@@ -296,6 +297,7 @@ cDvbPlayer::cDvbPlayer(const char *FileName, bool PauseLive)
      }
   else if (PauseLive)
      framesPerSecond = cRecording(FileName).FramesPerSecond(); // the fps rate might have changed from the default
+  marks.Load(FileName, framesPerSecond, isPesRecording);
 }
 
 cDvbPlayer::~cDvbPlayer()
@@ -374,6 +376,10 @@ bool cDvbPlayer::Save(void)
   if (index) {
      int Index = ptsIndex.FindIndex(DeviceGetSTC());
      if (Index >= 0) {
+        // set resume position to 0 if replay stops at the first mark
+        if (Setup.PlayJump && marks.First() &&
+            abs(Index - marks.First()->Position()) <= int(round(RESUMEBACKUP * framesPerSecond)))
+           Index = 0;
         int backup = int(round(RESUMEBACKUP * framesPerSecond));
         if (Index >= index->Last() - backup)
            Index = 0;
@@ -405,11 +411,26 @@ void cDvbPlayer::Action(void)
 {
   uchar *p = NULL;
   int pc = 0;
+  bool cutIn = false;
+  int total = -1;
 
   readIndex = Resume();
   if (readIndex >= 0)
      isyslog("resuming replay at index %d (%s)", readIndex, *IndexToHMSF(readIndex, true, framesPerSecond));
 
+  if (Setup.PlayJump && readIndex <= 0 && marks.First() && index) {
+     int Index = marks.First()->Position();
+     uint16_t FileNumber;
+     off_t FileOffset;
+     if (index->Get(Index, &FileNumber, &FileOffset) &&
+         NextFile(FileNumber, FileOffset)) {
+        isyslog("PlayJump: start replay at first mark %d (%s)",
+                Index, *IndexToHMSF(Index, true, framesPerSecond));
+        readIndex = Index;
+        }
+     }
+
+  bool LastMarkPause = false;
   nonBlockingFileReader = new cNonBlockingFileReader;
   int Length = 0;
   bool Sleep = false;
@@ -436,7 +457,7 @@ void cDvbPlayer::Action(void)
 
           // Read the next frame from the file:
 
-          if (playMode != pmStill && playMode != pmPause) {
+          if (playMode != pmStill && playMode != pmPause && !LastMarkPause) {
              if (!readFrame && (replayFile || readIndex >= 0)) {
                 if (!nonBlockingFileReader->Reading()) {
                    if (!SwitchToPlayFrame && (playMode == pmFast || (playMode == pmSlow && playDir == pdBackward))) {
@@ -473,6 +494,44 @@ void cDvbPlayer::Action(void)
                    else if (index) {
                       uint16_t FileNumber;
                       off_t FileOffset;
+                      if (Setup.PlayJump || Setup.PauseLastMark) {
+                         // check for end mark - jump to next mark or pause
+                         readIndex++;
+                         marks.Update();
+                         cMark *m = marks.Get(readIndex);
+                         if (m && (m->Index() & 0x01) != 0) {
+                            m = marks.Next(m);
+                            int Index;
+                            if (m)
+                               Index = m->Position();
+                            else if (Setup.PauseLastMark) {
+                               // pause at last mark
+                               isyslog("PauseLastMark: pause at position %d (%s)",
+                                       readIndex, *IndexToHMSF(readIndex, true, framesPerSecond));
+                               LastMarkPause = true;
+                               Index = -1;
+                               }
+                            else if (total == index->Last())
+                               // at last mark jump to end of recording
+                               Index = index->Last() - 1;
+                            else
+                               // jump but stay off end of live-recordings
+                               Index = index->GetNextIFrame(index->Last() - int(round(MAXSTUCKATEOF * framesPerSecond)), true);
+                            // don't jump in edited recordings
+                            if (Setup.PlayJump && Index > readIndex &&
+                                Index > index->GetNextIFrame(readIndex, true)) {
+                               isyslog("PlayJump: %d frames to %d (%s)",
+                                       Index - readIndex, Index,
+                                       *IndexToHMSF(Index, true, framesPerSecond));
+                               readIndex = Index;
+                               cutIn = true;
+                               }
+                            }
+                         readIndex--;
+                      }
+                      // for detecting growing length of live-recordings
+                      if (index->Get(readIndex + 1, &FileNumber, &FileOffset, &readIndependent) && readIndependent)
+                         total = index->Last();
                       if (index->Get(readIndex + 1, &FileNumber, &FileOffset, &readIndependent, &Length) && NextFile(FileNumber, FileOffset))
                          readIndex++;
                       else
@@ -517,6 +576,13 @@ void cDvbPlayer::Action(void)
              // Store the frame in the buffer:
 
              if (readFrame) {
+                if (cutIn) {
+                   if (isPesRecording)
+                      cRemux::SetBrokenLink(readFrame->Data(), readFrame->Count());
+                   //else
+                   //   TsSetTeiOnBrokenPackets(readFrame->Data(), readFrame->Count());
+                   cutIn = false;
+                   }
                 if (ringBuffer->Put(readFrame))
                    readFrame = NULL;
                 else
@@ -583,8 +649,13 @@ void cDvbPlayer::Action(void)
                 p = NULL;
                 }
              }
-          else
+          else {
+             if (LastMarkPause) {
+                LastMarkPause = false;
+                playMode = pmPause;
+                }
              Sleep = true;
+             }
 
           // Handle hitting begin/end of recording:
 
