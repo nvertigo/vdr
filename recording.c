@@ -1066,6 +1066,16 @@ const char *cRecording::PrefixFileName(char Prefix)
   return NULL;
 }
 
+const char *cRecording::UpdateFileName(const char *FileName)
+{
+  if (FileName && *FileName) {
+     free(fileName);
+     fileName = strdup(FileName);
+     return fileName;
+     }
+  return NULL;
+}
+
 int cRecording::HierarchyLevels(void) const
 {
   const char *s = name;
@@ -1358,7 +1368,7 @@ void cRecordings::AddByName(const char *FileName, bool TriggerUpdate)
      }
 }
 
-void cRecordings::DelByName(const char *FileName)
+void cRecordings::DelByName(const char *FileName, bool RemoveRecording)
 {
   LOCK_THREAD;
   cRecording *recording = GetByName(FileName);
@@ -1366,7 +1376,7 @@ void cRecordings::DelByName(const char *FileName)
      cThreadLock DeletedRecordingsLock(&DeletedRecordings);
      Del(recording, false);
      char *ext = strrchr(recording->fileName, '.');
-     if (ext) {
+     if (ext && RemoveRecording) {
         strncpy(ext, DELEXT, strlen(ext));
         if (access(recording->FileName(), F_OK) == 0) {
            recording->deleted = time(NULL);

@@ -229,6 +229,22 @@ cString PrefixVideoFileName(const char *FileName, char Prefix)
   return NULL;
 }
 
+cString NewVideoFileName(const char *FileName, const char *NewDirName)
+{
+  char *NewDir = ExchangeChars(strdup(NewDirName), true);
+  if (NewDir) {
+     const char *p = FileName + strlen(FileName); // p points at the terminating 0
+     while (p-- > FileName) {
+           if (*p == '/')
+              break;
+           }
+     cString NewName = cString::sprintf("%s/%s%s", VideoDirectory, NewDir, p);
+     free(NewDir);
+     return NewName;
+     }
+  return NULL;
+}
+
 void RemoveEmptyVideoDirectories(const char *IgnoreFiles[])
 {
   cVideoDirectory Dir;

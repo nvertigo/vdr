@@ -17,6 +17,7 @@
 #include "channels.h"
 #include "config.h"
 #include "cutter.h"
+#include "filetransfer.h"
 #include "i18n.h"
 #include "interface.h"
 #include "menu.h"
@@ -171,6 +172,10 @@ bool cShutdownHandler::ConfirmShutdown(bool Interactive)
      if (!Interactive || !Interface->Confirm(tr("Editing - shut down anyway?")))
         return false;
      }
+  if (cFileTransfer::Active()) {
+     if (!Interactive || !Interface->Confirm(tr("Transfering file - shut down anyway?")))
+        return false;
+     }
 
   cTimer *timer = Timers.GetNextActiveTimer();
   time_t Next = timer ? timer->StartTime() : 0;
@@ -212,6 +217,10 @@ bool cShutdownHandler::ConfirmRestart(bool Interactive)
 {
   if (cCutter::Active()) {
      if (!Interactive || !Interface->Confirm(tr("Editing - restart anyway?")))
+        return false;
+     }
+  if (cFileTransfer::Active()) {
+     if (!Interactive || !Interface->Confirm(tr("Transfering file - restart anyway?")))
         return false;
      }
 

@@ -56,6 +56,7 @@ private:
   void PrintHelpTopics(const char **hp);
   void CmdCHAN(const char *Option);
   void CmdCLRE(const char *Option);
+  void CmdCPYR(const char *Option);
   void CmdDELC(const char *Option);
   void CmdDELR(const char *Option);
   void CmdDELT(const char *Option);
@@ -71,6 +72,7 @@ private:
   void CmdMODC(const char *Option);
   void CmdMODT(const char *Option);
   void CmdMOVC(const char *Option);
+  void CmdMOVR(const char *Option);
   void CmdNEWC(const char *Option);
   void CmdNEWT(const char *Option);
   void CmdNEXT(const char *Option);

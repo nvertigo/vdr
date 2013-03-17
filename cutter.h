@@ -24,7 +24,7 @@ private:
   static bool error;
   static bool ended;
 public:
-  static bool Start(const char *FileName);
+  static bool Start(const char *FileName, const char *TargetFileName = NULL, bool Overwrite = true);
   static void Stop(void);
   static bool Active(const char *FileName = NULL);
          ///< Returns true if the cutter is currently active.

@@ -8,6 +8,7 @@
  */
 
 #include "cutter.h"
+#include "interface.h"
 #include "menu.h"
 #include "recording.h"
 #include "remux.h"
@@ -649,7 +650,7 @@ cCuttingThread *cCutter::cuttingThread = NULL;
 bool cCutter::error = false;
 bool cCutter::ended = false;
 
-bool cCutter::Start(const char *FileName)
+bool cCutter::Start(const char *FileName, const char *TargetFileName, bool Overwrite)
 {
   cMutexLock MutexLock(&mutex);
   if (!cuttingThread) {
@@ -663,11 +664,16 @@ bool cCutter::Start(const char *FileName)
      if (cMark *First = FromMarks.GetNextBegin())
         Recording.SetStartTime(Recording.Start() + (int(First->Position() / Recording.FramesPerSecond() + 30) / 60) * 60);
 
-     const char *evn = Recording.PrefixFileName('%');
-     if (evn && RemoveVideoFile(evn) && MakeDirs(evn, true)) {
+     cString evn = (TargetFileName && *TargetFileName) ? Recording.UpdateFileName(TargetFileName) : Recording.PrefixFileName('%');
+     if (!Overwrite && *evn && (access(*evn, F_OK) == 0) && !Interface->Confirm(tr("File already exists - overwrite?"))) {
+        do {
+           evn = PrefixVideoFileName(*evn, '%');
+        } while (*evn && (access(*evn, F_OK) == 0));
+        }
+     if (*evn && RemoveVideoFile(*evn) && MakeDirs(*evn, true)) {
         // XXX this can be removed once RenameVideoFile() follows symlinks (see videodir.c)
         // remove a possible deleted recording with the same name to avoid symlink mixups:
-        char *s = strdup(evn);
+        char *s = strdup(*evn);
         char *e = strrchr(s, '.');
         if (e) {
            if (strcmp(e, ".rec") == 0) {

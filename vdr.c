@@ -45,6 +45,7 @@
 #include "dvbdevice.h"
 #include "eitscan.h"
 #include "epg.h"
+#include "filetransfer.h"
 #include "i18n.h"
 #include "interface.h"
 #include "keys.h"
@@ -1321,6 +1322,12 @@ int main(int argc, char *argv[])
               else
                  Skins.Message(mtInfo, tr("Editing process finished"));
               }
+           if (!cFileTransfer::Active() && cFileTransfer::Ended()) {
+              if (cFileTransfer::Error())
+                 Skins.Message(mtError, tr("File transfer failed!"));
+              else
+                 Skins.Message(mtInfo, tr("File transfer finished"));
+              }
            }
 
         // SIGHUP shall cause a restart:
@@ -1336,7 +1343,7 @@ int main(int argc, char *argv[])
               ShutdownHandler.countdown.Cancel();
            }
 
-        if ((Now - LastInteract) > ACTIVITYTIMEOUT && !cRecordControls::Active() && !cCutter::Active() && !Interface->HasSVDRPConnection() && (Now - cRemote::LastActivity()) > ACTIVITYTIMEOUT) {
+        if ((Now - LastInteract) > ACTIVITYTIMEOUT && !cRecordControls::Active() && !cCutter::Active() && !cFileTransfer::Active() && !Interface->HasSVDRPConnection() && (Now - cRemote::LastActivity()) > ACTIVITYTIMEOUT) {
            // Handle housekeeping tasks
 
            // Shutdown:
@@ -1385,6 +1392,7 @@ Exit:
 
   PluginManager.StopPlugins();
   cRecordControls::Shutdown();
+  cFileTransfer::Stop();
   cCutter::Stop();
   delete Menu;
   cControl::Shutdown();

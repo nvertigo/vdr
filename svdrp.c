@@ -31,6 +31,7 @@
 #include "cutter.h"
 #include "device.h"
 #include "eitscan.h"
+#include "filetransfer.h"
 #include "keys.h"
 #include "menu.h"
 #include "plugin.h"
@@ -193,6 +194,11 @@ const char *HelpPages[] = {
   "    After a CLRE command, no further EPG processing is done for 10\n"
   "    seconds, so that data sent with subsequent PUTE commands doesn't\n"
   "    interfere with data from the broadcasters.",
+  "CPYR <number> <new name>\n"
+  "    Copy the recording with the given number. Before a recording can be\n"
+  "    copied, an LSTR command must have been executed in order to retrieve\n"
+  "    the recording numbers. The numbers don't change during subsequent CPYR\n"
+  "    commands.",
   "DELC <number>\n"
   "    Delete channel.",
   "DELR <number>\n"
@@ -258,6 +264,11 @@ const char *HelpPages[] = {
   "    used to easily activate or deactivate a timer.",
   "MOVC <number> <to>\n"
   "    Move a channel to a new position.",
+  "MOVR <number> <new name>\n"
+  "    Move the recording with the given number. Before a recording can be\n"
+  "    moved, an LSTR command must have been executed in order to retrieve\n"
+  "    the recording numbers. The numbers don't change during subsequent MOVR\n"
+  "    commands.",
   "NEWC <settings>\n"
   "    Create a new channel. Settings must be in the same format as returned\n"
   "    by the LSTC command.",
@@ -610,6 +621,32 @@ void cSVDRP::CmdCLRE(const char *Option)
      else
         Reply(451, "Error while clearing EPG data");
      }
+}
+
+void cSVDRP::CmdCPYR(const char *Option)
+{
+  if (*Option) {
+     char *tail;
+     int n = strtol(Option, &tail, 10);
+     cRecording *recording = Recordings.Get(n - 1);
+     if (recording && tail && tail != Option) {
+        char *oldName = strdup(recording->Name());
+        tail = skipspace(tail);
+        if (!cFileTransfer::Active()) {
+           if (cFileTransfer::Start(recording, tail, true))
+              Reply(250, "Copying recording \"%s\" to \"%s\"", oldName, tail);
+           else
+              Reply(554, "Can't start file transfer");
+           }
+        else
+           Reply(554, "File transfer already active");
+        free(oldName);
+        }
+     else
+        Reply(550, "Recording \"%d\" not found%s", n, Recordings.Count() ? "" : " (use LSTR before copying)");
+     }
+  else
+     Reply(501, "Invalid Option \"%s\"", Option);
 }
 
 void cSVDRP::CmdDELC(const char *Option)
@@ -1320,6 +1357,32 @@ void cSVDRP::CmdMOVC(const char *Option)
      Reply(501, "Missing channel number");
 }
 
+void cSVDRP::CmdMOVR(const char *Option)
+{
+  if (*Option) {
+     char *tail;
+     int n = strtol(Option, &tail, 10);
+     cRecording *recording = Recordings.Get(n - 1);
+     if (recording && tail && tail != Option) {
+        char *oldName = strdup(recording->Name());
+        tail = skipspace(tail);
+        if (!cFileTransfer::Active()) {
+           if (cFileTransfer::Start(recording, tail))
+              Reply(250, "Moving recording \"%s\" to \"%s\"", oldName, tail);
+           else
+              Reply(554, "Can't start file transfer");
+           }
+        else
+           Reply(554, "File transfer already active");
+        free(oldName);
+        }
+     else
+        Reply(550, "Recording \"%d\" not found%s", n, Recordings.Count() ? "" : " (use LSTR before moving)");
+     }
+  else
+     Reply(501, "Invalid Option \"%s\"", Option);
+}
+
 void cSVDRP::CmdNEWC(const char *Option)
 {
   if (*Option) {
@@ -1644,6 +1707,7 @@ void cSVDRP::Execute(char *Cmd)
   s = skipspace(s);
   if      (CMD("CHAN"))  CmdCHAN(s);
   else if (CMD("CLRE"))  CmdCLRE(s);
+  else if (CMD("CPYR"))  CmdCPYR(s);
   else if (CMD("DELC"))  CmdDELC(s);
   else if (CMD("DELR"))  CmdDELR(s);
   else if (CMD("DELT"))  CmdDELT(s);
@@ -1659,6 +1723,7 @@ void cSVDRP::Execute(char *Cmd)
   else if (CMD("MODC"))  CmdMODC(s);
   else if (CMD("MODT"))  CmdMODT(s);
   else if (CMD("MOVC"))  CmdMOVC(s);
+  else if (CMD("MOVR"))  CmdMOVR(s);
   else if (CMD("NEWC"))  CmdNEWC(s);
   else if (CMD("NEWT"))  CmdNEWT(s);
   else if (CMD("NEXT"))  CmdNEXT(s);

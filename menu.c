@@ -18,6 +18,7 @@
 #include "config.h"
 #include "cutter.h"
 #include "eitscan.h"
+#include "filetransfer.h"
 #include "i18n.h"
 #include "interface.h"
 #include "plugin.h"
@@ -2219,6 +2220,167 @@ void cMenuRecordingItem::SetMenuItem(cSkinDisplayMenu *DisplayMenu, int Index, b
      DisplayMenu->SetItem(Text(), Index, Current, Selectable);
 }
 
+// --- cMenuEditRecording ----------------------------------------------------
+
+class cMenuEditRecording : public cOsdMenu {
+private:
+  char name[MaxFileName];
+  cMenuEditStrItem *file;
+  cOsdItem *marksItem, *resumeItem;
+  bool isResume, isMarks;
+  cRecording *recording;
+  void SetHelpKeys(void);
+  eOSState SetFolder(void);
+public:
+  cMenuEditRecording(cRecording *Recording);
+  virtual eOSState ProcessKey(eKeys Key);
+};
+
+cMenuEditRecording::cMenuEditRecording(cRecording *Recording)
+:cOsdMenu(tr("Edit recording"), 14)
+{
+  cMarks marks;
+
+  file = NULL;
+  recording = Recording;
+
+  if (recording) {
+     Utf8Strn0Cpy(name, recording->Name(), sizeof(name));
+     Add(file = new cMenuEditStrItem(tr("File"), name, sizeof(name)));
+
+     Add(new cOsdItem("", osUnknown, false));
+
+     Add(new cOsdItem(cString::sprintf("%s:\t%s", tr("Date"), *DayDateTime(recording->Start())), osUnknown, false));
+
+     cChannel *channel = Channels.GetByChannelID(((cRecordingInfo *)recording->Info())->ChannelID());
+     if (channel)
+        Add(new cOsdItem(cString::sprintf("%s:\t%s", tr("Channel"), *ChannelString(channel, 0)), osUnknown, false));
+
+     int recLen = recording->LengthInSeconds();
+     if (recLen >= 0)
+        Add(new cOsdItem(cString::sprintf("%s:\t%d:%02d:%02d", tr("Length"), recLen / 3600, recLen / 60 % 60, recLen % 60), osUnknown, false));
+     else
+        recLen = 0;
+
+     int dirSize = DirSizeMB(recording->FileName());
+     cString bitRate = recLen ? cString::sprintf(" (%.2f MBit/s)", 8.0 * dirSize / recLen) : cString("");
+     Add(new cOsdItem(cString::sprintf("%s:\t%s", tr("Format"), recording->IsPesRecording() ? tr("PES") : tr("TS")), osUnknown, false));
+     Add(new cOsdItem((dirSize > 9999) ? cString::sprintf("%s:\t%.2f GB%s", tr("Size"), dirSize / 1024.0, *bitRate) : cString::sprintf("%s:\t%d MB%s", tr("Size"), dirSize, *bitRate), osUnknown, false));
+
+     Add(new cOsdItem("", osUnknown, false));
+
+     isMarks = marks.Load(recording->FileName(), recording->FramesPerSecond(), recording->IsPesRecording()) && marks.Count();
+     marksItem = new cOsdItem(tr("Delete marks information?"), osUser1, isMarks);
+     Add(marksItem);
+
+     cResumeFile ResumeFile(recording->FileName(), recording->IsPesRecording());
+     isResume = (ResumeFile.Read() != -1);
+     resumeItem = new cOsdItem(tr("Delete resume information?"), osUser2, isResume);
+     Add(resumeItem);
+     }
+
+  SetHelpKeys();
+}
+
+void cMenuEditRecording::SetHelpKeys(void)
+{
+  SetHelp(tr("Button$Folder"), tr("Button$Cut"), tr("Button$Copy"), tr("Button$Rename/Move"));
+}
+
+eOSState cMenuEditRecording::SetFolder(void)
+{
+  cMenuFolder *mf = (cMenuFolder *)SubMenu();
+  if (mf) {
+     cString Folder = mf->GetFolder();
+     char *p = strrchr(name, FOLDERDELIMCHAR);
+     if (p)
+        p++;
+     else
+        p = name;
+     if (!isempty(*Folder))
+        strn0cpy(name, cString::sprintf("%s%c%s", *Folder, FOLDERDELIMCHAR, p), sizeof(name));
+     else if (p != name)
+        memmove(name, p, strlen(p) + 1);
+     SetCurrent(file);
+     Display();
+     }
+  return CloseSubMenu();
+}
+
+eOSState cMenuEditRecording::ProcessKey(eKeys Key)
+{
+  eOSState state = cOsdMenu::ProcessKey(Key);
+
+  if (state == osUnknown) {
+     switch (Key) {
+       case kRed:
+            return AddSubMenu(new cMenuFolder(tr("Select folder"), &Folders, name));
+            break;
+       case kGreen:
+            if (!cCutter::Active()) {
+               if (!isMarks)
+                  Skins.Message(mtError, tr("No editing marks defined!"));
+               else if (!cCutter::Start(recording->FileName(), strcmp(recording->Name(), name) ? *NewVideoFileName(recording->FileName(), name) : NULL, false))
+                  Skins.Message(mtError, tr("Can't start editing process!"));
+               else
+                  Skins.Message(mtInfo, tr("Editing process started"));
+               }
+            else
+               Skins.Message(mtError, tr("Editing process already active!"));
+            return osContinue;
+       case kYellow:
+       case kBlue:
+            if (strcmp(recording->Name(), name)) {
+               if (!cFileTransfer::Active()) {
+                  if (cFileTransfer::Start(recording, name, (Key == kYellow)))
+                     Skins.Message(mtInfo, tr("File transfer started"));
+                  else
+                     Skins.Message(mtError, tr("Can't start file transfer!"));
+                  }
+               else
+                  Skins.Message(mtError, tr("File transfer already active!"));
+               }
+            return osRecordings;
+       default:
+            break;
+       }
+     return osContinue;
+     }
+  else if (state == osEnd && HasSubMenu())
+     state = SetFolder();
+  else if (state == osUser1) {
+     if (isMarks && Interface->Confirm(tr("Delete marks information?"))) {
+        cMarks marks;
+        marks.Load(recording->FileName(), recording->FramesPerSecond(), recording->IsPesRecording());
+        cMark *mark = marks.First();
+        while (mark) {
+              cMark *nextmark = marks.Next(mark);
+              marks.Del(mark);
+              mark = nextmark;
+              }
+        marks.Save();
+        isMarks = false;
+        marksItem->SetSelectable(isMarks);
+        SetCurrent(First());
+        Display();
+        }
+     return osContinue;
+     }
+  else if (state == osUser2) {
+     if (isResume && Interface->Confirm(tr("Delete resume information?"))) {
+        cResumeFile ResumeFile(recording->FileName(), recording->IsPesRecording());
+        ResumeFile.Delete();
+        isResume = false;
+        resumeItem->SetSelectable(isResume);
+        SetCurrent(First());
+        Display();
+        }
+     return osContinue;
+     }
+
+  return state;
+}
+
 // --- cMenuRecordings -------------------------------------------------------
 
 cMenuRecordings::cMenuRecordings(const char *Base, int Level, bool OpenSubMenus)
@@ -2461,6 +2623,16 @@ eOSState cMenuRecordings::Sort(void)
   return osContinue;
 }
 
+eOSState cMenuRecordings::Edit(void)
+{
+  if (HasSubMenu() || Count() == 0)
+     return osContinue;
+  cMenuRecordingItem *ri = (cMenuRecordingItem *)Get(Current());
+  if (ri && !ri->IsDirectory() && ri->Recording())
+     return AddSubMenu(new cMenuEditRecording(ri->Recording()));
+  return osContinue;
+}
+
 eOSState cMenuRecordings::ProcessKey(eKeys Key)
 {
   bool HadSubMenu = HasSubMenu();
@@ -2474,7 +2646,7 @@ eOSState cMenuRecordings::ProcessKey(eKeys Key)
        case kRed:    return (helpKeys > 1 && RecordingCommands.Count()) ? Commands() : Play();
        case kGreen:  return Rewind();
        case kYellow: return Delete();
-       case kInfo:
+       case kInfo:   return Edit();
        case kBlue:   return Info();
        case k0:      return Sort();
        case k1...k9: return Commands(Key);
@@ -3374,6 +3546,7 @@ cMenuMain::cMenuMain(eOSState State)
   replaying = false;
   stopReplayItem = NULL;
   cancelEditingItem = NULL;
+  cancelFileTransferItem = NULL;
   stopRecordingItem = NULL;
   recordControlsState = 0;
 
@@ -3512,6 +3685,19 @@ bool cMenuMain::Update(bool Force)
      result = true;
      }
 
+  // File transfer control:
+  bool FileTransferActive = cFileTransfer::Active();
+  if (FileTransferActive && !cancelFileTransferItem) {
+     // TRANSLATORS: note the leading blank!
+     Add(cancelFileTransferItem = new cOsdItem(tr(" Cancel file transfer"), osCancelTransfer));
+     result = true;
+     }
+  else if (cancelFileTransferItem && !FileTransferActive) {
+     Del(cancelFileTransferItem->Index());
+     cancelFileTransferItem = NULL;
+     result = true;
+     }
+
   // Record control:
   if (cRecordControls::StateChanged(recordControlsState)) {
      while (stopRecordingItem) {
@@ -3578,6 +3764,12 @@ eOSState cMenuMain::ProcessKey(eKeys Key)
                        break;
     case osCancelEdit: if (Interface->Confirm(tr("Cancel editing?"))) {
                           cCutter::Stop();
+                          return osEnd;
+                          }
+                       break;
+    case osCancelTransfer:
+                       if (Interface->Confirm(tr("Cancel file transfer?"))) {
+                          cFileTransfer::Stop();
                           return osEnd;
                           }
                        break;
@@ -4595,6 +4787,10 @@ bool cRecordControls::StateChanged(int &State)
 
 // --- cReplayControl --------------------------------------------------------
 
+#define REPLAYCONTROLSKIPLIMIT   9    // s
+#define REPLAYCONTROLSKIPSECONDS 90   // s
+#define REPLAYCONTROLSKIPTIMEOUT 5000 // ms
+
 cReplayControl *cReplayControl::currentReplayControl = NULL;
 cString cReplayControl::fileName;
 
@@ -4609,6 +4805,9 @@ cReplayControl::cReplayControl(bool PauseLive)
   lastCurrent = lastTotal = -1;
   lastPlay = lastForward = false;
   lastSpeed = -2; // an invalid value
+  lastSkipKey = kNone;
+  lastSkipSeconds = REPLAYCONTROLSKIPSECONDS;
+  lastSkipTimeout.Set(0);
   timeoutShow = 0;
   timeSearchActive = false;
   cRecording Recording(fileName);
@@ -4943,7 +5142,7 @@ void cReplayControl::EditCut(void)
            Skins.Message(mtError, tr("No editing marks defined!"));
         else if (!marks.GetNumSequences())
            Skins.Message(mtError, tr("No editing sequences defined!"));
-        else if (!cCutter::Start(fileName))
+        else if (!cCutter::Start(fileName, NULL, false))
            Skins.Message(mtError, tr("Can't start editing process!"));
         else
            Skins.Message(mtInfo, tr("Editing process started"));
@@ -5041,6 +5240,32 @@ eOSState cReplayControl::ProcessKey(eKeys Key)
     case kGreen:   SkipSeconds(-60); break;
     case kYellow|k_Repeat:
     case kYellow:  SkipSeconds( 60); break;
+    case k1|k_Repeat:
+    case k1:       SkipSeconds(-20); break;
+    case k3|k_Repeat:
+    case k3:       SkipSeconds( 20); break;
+    case kPrev|k_Repeat:
+    case kPrev:    if (lastSkipTimeout.TimedOut()) {
+                      lastSkipSeconds = REPLAYCONTROLSKIPSECONDS;
+                      lastSkipKey = kPrev;
+                   }
+                   else if (RAWKEY(lastSkipKey) != kPrev && lastSkipSeconds > (2 * REPLAYCONTROLSKIPLIMIT)) {
+                      lastSkipSeconds /= 2;
+                      lastSkipKey = kNone;
+                   }
+                   lastSkipTimeout.Set(REPLAYCONTROLSKIPTIMEOUT);
+                   SkipSeconds(-lastSkipSeconds); break;
+    case kNext|k_Repeat:
+    case kNext:    if (lastSkipTimeout.TimedOut()) {
+                      lastSkipSeconds = REPLAYCONTROLSKIPSECONDS;
+                      lastSkipKey = kNext;	
+                   }
+                   else if (RAWKEY(lastSkipKey) != kNext && lastSkipSeconds > (2 * REPLAYCONTROLSKIPLIMIT)) {
+                      lastSkipSeconds /= 2;
+                      lastSkipKey = kNone;
+                   }
+                   lastSkipTimeout.Set(REPLAYCONTROLSKIPTIMEOUT);
+                   SkipSeconds(lastSkipSeconds); break;
     case kStop:
     case kBlue:    Hide();
                    Stop();
@@ -5050,12 +5275,8 @@ eOSState cReplayControl::ProcessKey(eKeys Key)
       switch (int(Key)) {
         // Editing:
         case kMarkToggle:      MarkToggle(); break;
-        case kPrev|k_Repeat:
-        case kPrev:
         case kMarkJumpBack|k_Repeat:
         case kMarkJumpBack:    MarkJump(false); break;
-        case kNext|k_Repeat:
-        case kNext:
         case kMarkJumpForward|k_Repeat:
         case kMarkJumpForward: MarkJump(true); break;
         case kMarkMoveBack|k_Repeat:

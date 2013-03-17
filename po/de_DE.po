@@ -1398,3 +1398,70 @@ msgstr "Disk"
 
 msgid "free"
 msgstr "frei"
+
+msgid "Edit recording"
+msgstr "Aufnahme bearbeiten"
+
+msgid "Button$Cut"
+msgstr "Schneiden"
+
+msgid "Button$Copy"
+msgstr "Kopieren"
+
+msgid "Button$Rename/Move"
+msgstr "Umbenennen/Bewegen"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Length"
+msgstr "Länge"
+
+msgid "Format"
+msgstr "Format"
+
+msgid "PES"
+msgstr "PES"
+
+msgid "TS"
+msgstr "TS"
+
+msgid "Size"
+msgstr "Größe"
+
+msgid "Delete marks information?"
+msgstr "Gespeicherte Schnittmarken löschen?"
+
+msgid "Delete resume information?"
+msgstr "Gespeicherten Zeitpunkt der letzten Wiedergabe löschen?"
+
+msgid "File transfer started"
+msgstr "Dateiübertragung gestartet"
+
+msgid "Can't start file transfer!"
+msgstr "Dateiübertragung kann nicht gestartet werden!"
+
+msgid "File transfer already active!"
+msgstr "Dateiübertragung bereits aktiv!"
+ 
+#. TRANSLATORS: note the leading blank!
+msgid " Cancel file transfer"
+msgstr " Dateiübertragung beenden"
+
+msgid "Cancel file transfer?"
+msgstr "Dateiübertragung beenden?"
+
+msgid "Transfering file - shut down anyway?"
+msgstr "Übertrage Datei - trotzdem ausschalten?"
+
+msgid "Transfering file - restart anyway?"
+msgstr "Übertrage Datei - trotzdem neustarten?"
+
+msgid "File transfer failed!"
+msgstr "Dateiübertragung fehlgeschlagen!"
+
+msgid "File transfer finished"
+msgstr "Dateiübertragung fertiggestellt"
+
+msgid "File already exists - overwrite?"
+msgstr "Datei besteht bereits - überschreiben?"

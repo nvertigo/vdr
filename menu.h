@@ -101,6 +101,7 @@ private:
   bool replaying;
   cOsdItem *stopReplayItem;
   cOsdItem *cancelEditingItem;
+  cOsdItem *cancelFileTransferItem;
   cOsdItem *stopRecordingItem;
   int recordControlsState;
   static cOsdObject *pluginOsdObject;
@@ -206,6 +207,7 @@ private:
   eOSState Info(void);
   eOSState Sort(void);
   eOSState Commands(eKeys Key = kNone);
+  eOSState Edit(void);
 protected:
   cString DirectoryName(void);
 public:
@@ -264,6 +266,9 @@ private:
   int lastCurrent, lastTotal;
   bool lastPlay, lastForward;
   int lastSpeed;
+  int lastSkipSeconds;
+  eKeys lastSkipKey;
+  cTimeMs lastSkipTimeout;
   time_t timeoutShow;
   bool timeSearchActive, timeSearchHide;
   int timeSearchTime, timeSearchPos;

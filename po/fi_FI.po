@@ -1402,3 +1402,70 @@ msgstr "Levy"
 
 msgid "free"
 msgstr "vapaana"
+
+msgid "Edit recording"
+msgstr "Muokkaa tallennetta"
+
+msgid "Button$Cut"
+msgstr "Leikkaa"
+
+msgid "Button$Copy"
+msgstr "Kopioi"
+
+msgid "Button$Rename/Move"
+msgstr "Nimeä/Siirrä"
+
+msgid "Date"
+msgstr "Päiväys"
+
+msgid "Length"
+msgstr "Pituus"
+
+msgid "Format"
+msgstr "Tiedostomuoto"
+
+msgid "PES"
+msgstr "PES"
+
+msgid "TS"
+msgstr "TS"
+
+msgid "Size"
+msgstr "Koko"
+
+msgid "Delete marks information?"
+msgstr "Poista tallenteen merkinnät?"
+
+msgid "Delete resume information?"
+msgstr "Poista tallenteen paluutiedot?"
+
+msgid "File transfer started"
+msgstr "Tiedoston siirto aloitettu"
+
+msgid "Can't start file transfer!"
+msgstr "Tiedoston siirron aloitus epäonnistui!"
+
+msgid "File transfer already active!"
+msgstr "Tiedoston siirto on jo käynnissä!"
+ 
+#. TRANSLATORS: note the leading blank!
+msgid " Cancel file transfer"
+msgstr " Peru tiedoston siirto"
+
+msgid "Cancel file transfer?"
+msgstr "Perutaanko tiedoston siirto?"
+
+msgid "Transfering file - shut down anyway?"
+msgstr "Tiedoston siirto kesken - sammutetaanko?"
+
+msgid "Transfering file - restart anyway?"
+msgstr "Tiedoston siirto kesken - käynnistetäänkö uudelleen?"
+
+msgid "File transfer failed!"
+msgstr "Tiedoston siirto epäonnistui!"
+
+msgid "File transfer finished"
+msgstr "Tiedoston siirto valmis"
+
+msgid "File already exists - overwrite?"
+msgstr "Tiedosto on jo olemassa - ylikirjoitetaanko?"

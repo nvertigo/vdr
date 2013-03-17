@@ -374,11 +374,16 @@ bool cDvbPlayer::Save(void)
   if (index) {
      int Index = ptsIndex.FindIndex(DeviceGetSTC());
      if (Index >= 0) {
-        Index -= int(round(RESUMEBACKUP * framesPerSecond));
-        if (Index > 0)
-           Index = index->GetNextIFrame(Index, false);
-        else
+        int backup = int(round(RESUMEBACKUP * framesPerSecond));
+        if (Index >= index->Last() - backup)
            Index = 0;
+        else {
+           Index -= backup;
+           if (Index > 0)
+              Index = index->GetNextIFrame(Index, false);
+           else
+              Index = 0;
+           }
         if (Index >= 0)
            return index->StoreResume(Index);
         }

@@ -119,6 +119,7 @@ public:
   const char *Title(char Delimiter = ' ', bool NewIndicator = false, int Level = -1) const;
   const cRecordingInfo *Info(void) const { return info; }
   const char *PrefixFileName(char Prefix);
+  const char *UpdateFileName(const char *FileName);
   int HierarchyLevels(void) const;
   void ResetResume(void) const;
   double FramesPerSecond(void) const { return framesPerSecond; }
@@ -130,7 +131,7 @@ public:
   int FileSizeMB(void) const;
        ///< Returns the total file size of this recording (in MB), or -1 if the file
        ///< size is unknown.
-  bool IsNew(void) const { return GetResume() <= 0; }
+  bool IsNew(void) const { return GetResume() < 0; }
   bool IsEdited(void) const;
   bool IsPesRecording(void) const { return isPesRecording; }
   bool IsOnVideoDirectoryFileSystem(void) const;
@@ -191,7 +192,7 @@ public:
   void ClearSortNames(void);
   cRecording *GetByName(const char *FileName);
   void AddByName(const char *FileName, bool TriggerUpdate = true);
-  void DelByName(const char *FileName);
+  void DelByName(const char *FileName, bool RemoveRecording = true);
   void UpdateByName(const char *FileName);
   int TotalFileSizeMB(void);
   double MBperMinute(void);
