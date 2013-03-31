@@ -408,6 +408,10 @@ cSetup::cSetup(void)
   SubtitleFgTransparency = 0;
   SubtitleBgTransparency = 0;
   EPGLanguages[0] = -1;
+  DoubleEpgTimeDelta = 15;
+  DoubleEpgAction = 0;
+  MixEpgAction = 0;
+  DisableVPS = 0;
   EPGScanTimeout = 5;
   EPGBugfixLevel = 3;
   EPGLinger = 0;
@@ -622,6 +626,10 @@ bool cSetup::Parse(const char *Name, const char *Value)
   else if (!strcasecmp(Name, "SubtitleFgTransparency")) SubtitleFgTransparency = atoi(Value);
   else if (!strcasecmp(Name, "SubtitleBgTransparency")) SubtitleBgTransparency = atoi(Value);
   else if (!strcasecmp(Name, "EPGLanguages"))        return ParseLanguages(Value, EPGLanguages);
+  else if (!strcasecmp(Name, "DoubleEpgTimeDelta"))  DoubleEpgTimeDelta = atoi(Value);
+  else if (!strcasecmp(Name, "DoubleEpgAction"))     DoubleEpgAction    = atoi(Value);
+  else if (!strcasecmp(Name, "MixEpgAction"))        MixEpgAction       = atoi(Value);
+  else if (!strcasecmp(Name, "DisableVPS"))          DisableVPS         = atoi(Value);
   else if (!strcasecmp(Name, "EPGScanTimeout"))      EPGScanTimeout     = atoi(Value);
   else if (!strcasecmp(Name, "EPGBugfixLevel"))      EPGBugfixLevel     = atoi(Value);
   else if (!strcasecmp(Name, "EPGLinger"))           EPGLinger          = atoi(Value);
@@ -740,6 +748,10 @@ bool cSetup::Save(void)
   Store("SubtitleFgTransparency", SubtitleFgTransparency);
   Store("SubtitleBgTransparency", SubtitleBgTransparency);
   StoreLanguages("EPGLanguages", EPGLanguages);
+  Store("DoubleEpgTimeDelta", DoubleEpgTimeDelta);
+  Store("DoubleEpgAction",    DoubleEpgAction);
+  Store("MixEpgAction",       MixEpgAction);
+  Store("DisableVPS",         DisableVPS);
   Store("EPGScanTimeout",     EPGScanTimeout);
   Store("EPGBugfixLevel",     EPGBugfixLevel);
   Store("EPGLinger",          EPGLinger);

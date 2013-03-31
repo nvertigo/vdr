@@ -2722,6 +2722,10 @@ void cMenuSetupEPG::Setup(void)
   for (int i = 0; i < numLanguages; i++)
       // TRANSLATORS: note the singular!
       Add(new cMenuEditStraItem(tr("Setup.EPG$Preferred language"),    &data.EPGLanguages[i], I18nLanguages()->Size(), &I18nLanguages()->At(0)));
+  Add(new cMenuEditIntItem(tr("Setup.EPG$Period for double EPG search(min)"), &data.DoubleEpgTimeDelta));
+  Add(new cMenuEditBoolItem(tr("Setup.EPG$extern double Epg entry"),   &data.DoubleEpgAction, "adjust", "delete"));
+  Add(new cMenuEditBoolItem(tr("Setup.EPG$Mix intern and extern EPG"), &data.MixEpgAction));
+  Add(new cMenuEditBoolItem(tr("Setup.EPG$Disable running VPS event"), &data.DisableVPS));
 
   SetCurrent(Get(current));
   Display();
