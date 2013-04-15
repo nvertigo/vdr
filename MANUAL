@@ -924,6 +924,25 @@ Version 2.0
                          0 resulting in a file named 'resume', and any other
                          value resulting in 'resume.n'.
 
+  Jump&Play = no         Turns playing on or off after jumping forward to the
+                         next editing mark with the '9' key.
+
+  Play&Jump = no         Turns automatic jumping over commercial breaks on or
+                         off. This includes jumping to the first mark, if the
+                         replay starts at the beginning of a recording - and
+                         stopping the replay at the last mark.
+                         With this setting enabled, the behaviour of the '8'
+                         key during replay is changed too. It moves the actual
+                         replay position not only three seconds before the
+                         next "start" mark, but also before the next "end"
+                         mark. This can be used to test, if the editing marks
+                         are correctly positioned for a "smooth" jump over a
+                         commercial break.
+
+  Pause at last mark = no
+                         Turns pausing of replay at the last editing mark on or
+                         off.
+
   Miscellaneous:
 
   Min. event timeout = 30

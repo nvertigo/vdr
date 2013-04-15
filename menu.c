@@ -3176,6 +3176,9 @@ cMenuSetupReplay::cMenuSetupReplay(void)
   Add(new cMenuEditIntItem( tr("Setup.Replay$Progress display time (s)"), &data.ProgressDisplayTime, 0, 60));
   Add(new cMenuEditBoolItem(tr("Setup.Replay$Pause replay when setting mark"), &data.PauseOnMarkSet));
   Add(new cMenuEditIntItem(tr("Setup.Replay$Resume ID"), &data.ResumeID, 0, 99));
+  Add(new cMenuEditBoolItem(tr("Setup.Replay$Jump&Play"), &data.JumpPlay));
+  Add(new cMenuEditBoolItem(tr("Setup.Replay$Play&Jump"), &data.PlayJump));
+  Add(new cMenuEditBoolItem(tr("Setup.Replay$Pause at last mark"), &data.PauseLastMark));
 }
 
 void cMenuSetupReplay::Store(void)
@@ -4929,8 +4932,17 @@ void cReplayControl::MarkJump(bool Forward)
   if (GetIndex(Current, Total)) {
      if (marks.Count()) {
         if (cMark *m = Forward ? marks.GetNext(Current) : marks.GetPrev(Current)) {
-           Goto(m->Position(), true);
-           displayFrames = true;
+           bool Play2, Forward2;
+           int Speed;
+           if (Setup.JumpPlay && GetReplayMode(Play2, Forward2, Speed) &&
+               Play2 && Forward && m->Position() < Total - SecondsToFrames(3, FramesPerSecond())) {
+              Goto(m->Position());
+              Play();
+              }
+           else {
+              Goto(m->Position(), true);
+              displayFrames = true;
+              }
            return;
            }
         }
@@ -4991,7 +5003,7 @@ void cReplayControl::EditTest(void)
      if (!m)
         m = marks.GetNext(Current);
      if (m) {
-        if ((m->Index() & 0x01) != 0)
+        if ((m->Index() & 0x01) != 0 && !Setup.PlayJump)
            m = marks.Next(m);
         if (m) {
            Goto(m->Position() - SecondsToFrames(3, FramesPerSecond()));
