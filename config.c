@@ -465,6 +465,9 @@ cSetup::cSetup(void)
   ProgressDisplayTime = 0;
   PauseOnMarkSet = 0;
   ResumeID = 0;
+  JumpPlay = 0;
+  PlayJump = 0;
+  PauseLastMark = 0;
   CurrentChannel = -1;
   CurrentVolume = MAXVOLUME;
   CurrentDolby = 0;
@@ -670,6 +673,9 @@ bool cSetup::Parse(const char *Name, const char *Value)
   else if (!strcasecmp(Name, "ProgressDisplayTime")) ProgressDisplayTime= atoi(Value);
   else if (!strcasecmp(Name, "PauseOnMarkSet"))      PauseOnMarkSet     = atoi(Value);
   else if (!strcasecmp(Name, "ResumeID"))            ResumeID           = atoi(Value);
+  else if (!strcasecmp(Name, "JumpPlay"))            JumpPlay           = atoi(Value);
+  else if (!strcasecmp(Name, "PlayJump"))            PlayJump           = atoi(Value);
+  else if (!strcasecmp(Name, "PauseLastMark"))       PauseLastMark      = atoi(Value);
   else if (!strcasecmp(Name, "CurrentChannel"))      CurrentChannel     = atoi(Value);
   else if (!strcasecmp(Name, "CurrentVolume"))       CurrentVolume      = atoi(Value);
   else if (!strcasecmp(Name, "CurrentDolby"))        CurrentDolby       = atoi(Value);
@@ -779,6 +785,9 @@ bool cSetup::Save(void)
   Store("ProgressDisplayTime",ProgressDisplayTime);
   Store("PauseOnMarkSet",     PauseOnMarkSet);
   Store("ResumeID",           ResumeID);
+  Store("JumpPlay",           JumpPlay);
+  Store("PlayJump",           PlayJump);
+  Store("PauseLastMark",      PauseLastMark);
   Store("CurrentChannel",     CurrentChannel);
   Store("CurrentVolume",      CurrentVolume);
   Store("CurrentDolby",       CurrentDolby);
