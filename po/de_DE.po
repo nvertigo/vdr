@@ -1201,6 +1201,15 @@ msgstr "Zeitversetzte Aufnahme löschen"
 msgid "Replay"
 msgstr "Wiedergabe"
 
+msgid "Setup.Replay$Jump&Play"
+msgstr "Wiedergabe nach Sprung"
+
+msgid "Setup.Replay$Play&Jump"
+msgstr "Sprung bei Schnittmarke"
+
+msgid "Setup.Replay$Pause at last mark"
+msgstr "Pause bei letzter Marke"
+
 msgid "Setup.Replay$Multi speed mode"
 msgstr "Mehrstufiger Vor-/Rücklauf"
 
