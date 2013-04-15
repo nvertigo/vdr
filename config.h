@@ -40,6 +40,8 @@
 #define MAINMENUHOOKSVERSION "1.0.1"
 #define MAINMENUHOOKSVERSNUM 10001  // Version * 10000 + Major * 100 + Minor
 
+#define JUMPPLAYVERSNUM 110
+
 #define MAXPRIORITY       99
 #define MINPRIORITY       (-MAXPRIORITY)
 #define LIVEPRIORITY      0                  // priority used when selecting a device for live viewing
@@ -338,6 +340,9 @@ public:
   int ProgressDisplayTime;
   int PauseOnMarkSet;
   int ResumeID;
+  int JumpPlay;
+  int PlayJump;
+  int PauseLastMark;
   int CurrentChannel;
   int CurrentVolume;
   int VolumeSteps;
