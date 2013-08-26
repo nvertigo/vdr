@@ -283,10 +283,6 @@ public:
   int SubtitleOffset;
   int SubtitleFgTransparency, SubtitleBgTransparency;
   int EPGLanguages[I18N_MAX_LANGUAGES + 1];
-  int DoubleEpgTimeDelta;
-  int DoubleEpgAction;
-  int MixEpgAction;
-  int DisableVPS;
   int EPGScanTimeout;
   int EPGBugfixLevel;
   int EPGLinger;

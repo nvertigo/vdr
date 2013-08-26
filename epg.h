@@ -164,7 +164,6 @@ public:
   void DropOutdated(time_t SegmentStart, time_t SegmentEnd, uchar TableID, uchar Version);
   void Cleanup(time_t Time);
   void Cleanup(void);
-  const cEvent *GetPreviousEvent(cEvent *Event) const; //:EW
   cEvent *AddEvent(cEvent *Event);
   void DelEvent(cEvent *Event);
   void HashEvent(cEvent *Event);

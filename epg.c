@@ -972,29 +972,6 @@ const cEvent *cSchedule::GetEventAround(time_t Time) const
   return pe;
 }
 
-const cEvent *cSchedule::GetPreviousEvent(cEvent *Event) const
-{
-
-   if(!Event || Event->Duration() == 0 || Event->StartTime() == 0)
-      return NULL;
-   // Returns either the event info to the previous/following event to the given EventID or, if that one can't be found NULL :EW
-   cEvent *pt = NULL;
-   int epgTimeDelta = Setup.DoubleEpgTimeDelta * 60 + 1;
-   for (pt = events.First(); pt; pt = events.Next(pt))
-      if(pt && pt->TableID() == 0x00)
-         if ((Event->StartTime() - pt->StartTime()) > -  epgTimeDelta && (Event->StartTime() - pt->StartTime()) < epgTimeDelta)
-         {
-            if((pt->Duration() + (pt->Duration()/ 5) + 1) > Event->Duration() && (pt->Duration() - (pt->Duration()/ 5) - 1) < Event->Duration())
-               return pt;
-            else if (pt->Title() && Event->Title() && (strcmp(pt->Title(), ".") != 0 && strcmp(Event->Title(), ".") != 0))
-            {
-               if (strstr(pt->Title(), Event->Title()) != NULL || strstr(Event->Title(), pt->Title()) != NULL)
-                  return pt;
-            }
-         }
-   return NULL;
-}
-
 void cSchedule::SetRunningStatus(cEvent *Event, int RunningStatus, cChannel *Channel)
 {
   hasRunning = false;
