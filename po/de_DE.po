@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 2.0.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2013-03-04 14:46+0100\n"
+"POT-Creation-Date: 2013-05-21 13:43+0200\n"
 "PO-Revision-Date: 2010-01-16 16:46+0100\n"
 "Last-Translator: Klaus Schmidinger <vdr@tvdr.de>\n"
 "Language-Team: German <vdr@linuxtv.org>\n"
@@ -870,18 +870,6 @@ msgstr "EPG"
 msgid "Button$Scan"
 msgstr "Scan"
 
-msgid "Setup.EPG$Period for double EPG search(min)"
-msgstr "Zeitspanne für dop. EPG-Suche(min)"
-
-msgid "Setup.EPG$extern double Epg entry"
-msgstr "Doppelten externen EPG-Eintrag"
-
-msgid "Setup.EPG$Mix intern and extern EPG"
-msgstr "Internen und externen EPG mischen"
-
-+msgid "Setup.EPG$Disable running VPS event"
-+msgstr "Erk. des lauf. VPS-Events abschalten"
-
 msgid "Setup.EPG$EPG scan timeout (h)"
 msgstr "Zeit bis zur EPG-Aktualisierung (h)"
 
@@ -904,6 +892,18 @@ msgstr "Bevorzugte Sprachen"
 #. TRANSLATORS: note the singular!
 msgid "Setup.EPG$Preferred language"
 msgstr "Bevorzugte Sprache"
+
+msgid "Setup.EPG$Period for double EPG search(min)"
+msgstr "Zeitspanne für dop. EPG-Suche(min)"
+
+msgid "Setup.EPG$extern double Epg entry"
+msgstr "Doppelten externen EPG-Eintrag"
+
+msgid "Setup.EPG$Mix intern and extern EPG"
+msgstr "Internen und externen EPG mischen"
+
+msgid "Setup.EPG$Disable running VPS event"
+msgstr "Erk. des lauf. VPS-Events abschalten"
 
 msgid "pan&scan"
 msgstr "pan&scan"
@@ -1107,15 +1107,6 @@ msgstr "Zeitversetzte Aufnahme löschen"
 msgid "Replay"
 msgstr "Wiedergabe"
 
-msgid "Setup.Replay$Jump&Play"
-msgstr "Wiedergabe nach Sprung"
-
-msgid "Setup.Replay$Play&Jump"
-msgstr "Sprung bei Schnittmarke"
-
-msgid "Setup.Replay$Pause at last mark"
-msgstr "Pause bei letzter Marke"
-
 msgid "Setup.Replay$Multi speed mode"
 msgstr "Mehrstufiger Vor-/Rücklauf"
 
@@ -1133,6 +1124,15 @@ msgstr "Pause beim Setzen einer Schnittmarke"
 
 msgid "Setup.Replay$Resume ID"
 msgstr "Wiedergabe-ID"
+
+msgid "Setup.Replay$Jump&Play"
+msgstr "Wiedergabe nach Sprung"
+
+msgid "Setup.Replay$Play&Jump"
+msgstr "Sprung bei Schnittmarke"
+
+msgid "Setup.Replay$Pause at last mark"
+msgstr "Pause bei letzter Marke"
 
 msgid "Miscellaneous"
 msgstr "Sonstiges"

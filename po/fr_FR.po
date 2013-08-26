@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 2.0.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2013-03-04 14:46+0100\n"
+"POT-Creation-Date: 2013-05-21 13:43+0200\n"
 "PO-Revision-Date: 2013-02-24 12:56+0100\n"
 "Last-Translator: Dominique Plu <dplu@free.fr>\n"
 "Language-Team: French <vdr@linuxtv.org>\n"
@@ -903,6 +903,18 @@ msgstr "Langues préférées"
 msgid "Setup.EPG$Preferred language"
 msgstr "Langue préférée"
 
+msgid "Setup.EPG$Period for double EPG search(min)"
+msgstr ""
+
+msgid "Setup.EPG$extern double Epg entry"
+msgstr ""
+
+msgid "Setup.EPG$Mix intern and extern EPG"
+msgstr ""
+
+msgid "Setup.EPG$Disable running VPS event"
+msgstr ""
+
 msgid "pan&scan"
 msgstr "pan&scan"
 
@@ -1122,6 +1134,15 @@ msgstr "Arrêt lecture si ajout marqueur"
 
 msgid "Setup.Replay$Resume ID"
 msgstr "ID de reprise"
+
+msgid "Setup.Replay$Jump&Play"
+msgstr ""
+
+msgid "Setup.Replay$Play&Jump"
+msgstr ""
+
+msgid "Setup.Replay$Pause at last mark"
+msgstr ""
 
 msgid "Miscellaneous"
 msgstr "Divers"
