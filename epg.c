@@ -1537,3 +1537,19 @@ void cEpgHandlers::DropOutdated(cSchedule *Schedule, time_t SegmentStart, time_t
       }
   Schedule->DropOutdated(SegmentStart, SegmentEnd, TableID, Version);
 }
+
+void cEpgHandlers::BeginSegmentTransfer(const cChannel *Channel, bool OnlyRunningStatus)
+{
+  for (cEpgHandler *eh = First(); eh; eh = Next(eh)) {
+      if (eh->BeginSegmentTransfer(Channel, OnlyRunningStatus))
+         return;
+      }
+}
+
+void cEpgHandlers::EndSegmentTransfer(bool Modified, bool OnlyRunningStatus)
+{
+  for (cEpgHandler *eh = First(); eh; eh = Next(eh)) {
+      if (eh->EndSegmentTransfer(Modified, OnlyRunningStatus))
+         return;
+      }
+}

@@ -46,6 +46,8 @@ cEIT::cEIT(cSchedules *Schedules, int Source, u_char Tid, const u_char *Data, bo
      return;
      }
 
+  EpgHandlers.BeginSegmentTransfer(channel, OnlyRunningStatus);
+
   bool handledExternally = EpgHandlers.HandledExternally(channel);
   cSchedule *pSchedule = (cSchedule *)Schedules->GetSchedule(channel, true);
 
@@ -310,6 +312,7 @@ cEIT::cEIT(cSchedules *Schedules, int Source, u_char Tid, const u_char *Data, bo
      Schedules->SetModified(pSchedule);
      }
   Channels.Unlock();
+  EpgHandlers.EndSegmentTransfer(Modified, OnlyRunningStatus);
 }
 
 // --- cTDT ------------------------------------------------------------------

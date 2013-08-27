@@ -273,6 +273,12 @@ public:
   virtual bool DropOutdated(cSchedule *Schedule, time_t SegmentStart, time_t SegmentEnd, uchar TableID, uchar Version) { return false; }
           ///< Takes a look at all EPG events between SegmentStart and SegmentEnd and
           ///< drops outdated events.
+  virtual bool BeginSegmentTransfer(const cChannel *Channel, bool OnlyRunningStatus) { return false; }
+          ///< called directly after IgnoreChannel before any other handler method called
+          ///< designed to give handlers the ossibility to prepare a transaction 
+  virtual bool EndSegmentTransfer(bool Modified, bool OnlyRunningStatus) { return false; }
+          ///< called at last after the segment data is processed
+          ///< at this oint handlers should close/commt/rollback their transactions
   };
 
 class cEpgHandlers : public cList<cEpgHandler> {
@@ -295,6 +301,8 @@ public:
   void HandleEvent(cEvent *Event);
   void SortSchedule(cSchedule *Schedule);
   void DropOutdated(cSchedule *Schedule, time_t SegmentStart, time_t SegmentEnd, uchar TableID, uchar Version);
+  void BeginSegmentTransfer(const cChannel *Channel, bool OnlyRunningStatus);
+  void EndSegmentTransfer(bool Modified, bool OnlyRunningStatus);
   };
 
 extern cEpgHandlers EpgHandlers;
