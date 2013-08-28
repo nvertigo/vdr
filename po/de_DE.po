@@ -879,8 +879,8 @@ msgstr "Doppelten externen EPG-Eintrag"
 msgid "Setup.EPG$Mix intern and extern EPG"
 msgstr "Internen und externen EPG mischen"
 
-+msgid "Setup.EPG$Disable running VPS event"
-+msgstr "Erk. des lauf. VPS-Events abschalten"
+msgid "Setup.EPG$Disable running VPS event"
+msgstr "Erk. des lauf. VPS-Events abschalten"
 
 msgid "Setup.EPG$EPG scan timeout (h)"
 msgstr "Zeit bis zur EPG-Aktualisierung (h)"
