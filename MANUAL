@@ -48,7 +48,7 @@ Version 2.0
   FastRew     fast rewind
 
   Next        Next/previous channel group (in live tv mode)
-  Prev        or next/previous editing mark (in replay mode)
+  Prev        or binary skipping (in replay mode)
 
   Channel+    channel up
   Channel-    channel down
