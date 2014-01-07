@@ -4995,6 +4995,10 @@ bool cRecordControls::StateChanged(int &State)
 
 // --- cReplayControl --------------------------------------------------------
 
+#define REPLAYCONTROLSKIPLIMIT   9    // s
+#define REPLAYCONTROLSKIPSECONDS 90   // s
+#define REPLAYCONTROLSKIPTIMEOUT 5000 // ms
+
 cReplayControl *cReplayControl::currentReplayControl = NULL;
 cString cReplayControl::fileName;
 
@@ -5009,6 +5013,9 @@ cReplayControl::cReplayControl(bool PauseLive)
   lastCurrent = lastTotal = -1;
   lastPlay = lastForward = false;
   lastSpeed = -2; // an invalid value
+  lastSkipKey = kNone;
+  lastSkipSeconds = REPLAYCONTROLSKIPSECONDS;
+  lastSkipTimeout.Set(0);
   timeoutShow = 0;
   timeSearchActive = false;
   cRecording Recording(fileName);
@@ -5445,6 +5452,32 @@ eOSState cReplayControl::ProcessKey(eKeys Key)
     case kGreen:   SkipSeconds(-60); break;
     case kYellow|k_Repeat:
     case kYellow:  SkipSeconds( 60); break;
+    case k1|k_Repeat:
+    case k1:       SkipSeconds(-20); break;
+    case k3|k_Repeat:
+    case k3:       SkipSeconds( 20); break;
+    case kPrev|k_Repeat:
+    case kPrev:    if (lastSkipTimeout.TimedOut()) {
+                      lastSkipSeconds = REPLAYCONTROLSKIPSECONDS;
+                      lastSkipKey = kPrev;
+                   }
+                   else if (RAWKEY(lastSkipKey) != kPrev && lastSkipSeconds > (2 * REPLAYCONTROLSKIPLIMIT)) {
+                      lastSkipSeconds /= 2;
+                      lastSkipKey = kNone;
+                   }
+                   lastSkipTimeout.Set(REPLAYCONTROLSKIPTIMEOUT);
+                   SkipSeconds(-lastSkipSeconds); break;
+    case kNext|k_Repeat:
+    case kNext:    if (lastSkipTimeout.TimedOut()) {
+                      lastSkipSeconds = REPLAYCONTROLSKIPSECONDS;
+                      lastSkipKey = kNext;	
+                   }
+                   else if (RAWKEY(lastSkipKey) != kNext && lastSkipSeconds > (2 * REPLAYCONTROLSKIPLIMIT)) {
+                      lastSkipSeconds /= 2;
+                      lastSkipKey = kNone;
+                   }
+                   lastSkipTimeout.Set(REPLAYCONTROLSKIPTIMEOUT);
+                   SkipSeconds(lastSkipSeconds); break;
     case kStop:
     case kBlue:    Hide();
                    Stop();
@@ -5454,12 +5487,8 @@ eOSState cReplayControl::ProcessKey(eKeys Key)
       switch (int(Key)) {
         // Editing:
         case kMarkToggle:      MarkToggle(); break;
-        case kPrev|k_Repeat:
-        case kPrev:
         case kMarkJumpBack|k_Repeat:
         case kMarkJumpBack:    MarkJump(false); break;
-        case kNext|k_Repeat:
-        case kNext:
         case kMarkJumpForward|k_Repeat:
         case kMarkJumpForward: MarkJump(true); break;
         case kMarkMoveBack|k_Repeat:
