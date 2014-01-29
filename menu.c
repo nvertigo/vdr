@@ -31,6 +31,7 @@
 #include "timers.h"
 #include "transfer.h"
 #include "videodir.h"
+#include "menuorgpatch.h"
 
 #define MAXWAIT4EPGINFO   3 // seconds
 #define MODETIMEOUT       3 // seconds
@@ -3551,6 +3552,9 @@ cMenuSetupReplay::cMenuSetupReplay(void)
   Add(new cMenuEditIntItem( tr("Setup.Replay$Progress display time (s)"), &data.ProgressDisplayTime, 0, 60));
   Add(new cMenuEditBoolItem(tr("Setup.Replay$Pause replay when setting mark"), &data.PauseOnMarkSet));
   Add(new cMenuEditIntItem(tr("Setup.Replay$Resume ID"), &data.ResumeID, 0, 99));
+  Add(new cMenuEditBoolItem(tr("Setup.Replay$Jump&Play"), &data.JumpPlay));
+  Add(new cMenuEditBoolItem(tr("Setup.Replay$Play&Jump"), &data.PlayJump));
+  Add(new cMenuEditBoolItem(tr("Setup.Replay$Pause at last mark"), &data.PauseLastMark));
 }
 
 void cMenuSetupReplay::Store(void)
@@ -3758,19 +3762,38 @@ cMenuMain::cMenuMain(eOSState State, bool OpenSubMenus)
   cancelEditingItem = NULL;
   stopRecordingItem = NULL;
   recordControlsState = 0;
+
+  MenuOrgPatch::EnterRootMenu();
+
   Set();
 
   // Initial submenus:
 
+  cOsdObject *menu = NULL;
   switch (State) {
-    case osSchedule:   AddSubMenu(new cMenuSchedule); break;
-    case osChannels:   AddSubMenu(new cMenuChannels); break;
-    case osTimers:     AddSubMenu(new cMenuTimers); break;
-    case osRecordings: AddSubMenu(new cMenuRecordings(NULL, 0, OpenSubMenus)); break;
-    case osSetup:      AddSubMenu(new cMenuSetup); break;
-    case osCommands:   AddSubMenu(new cMenuCommands(tr("Commands"), &Commands)); break;
+    case osSchedule:
+        if (!cPluginManager::CallFirstService("MainMenuHooksPatch-v1.0::osSchedule", &menu))
+            menu = new cMenuSchedule;
+        break;
+    case osChannels:
+        if (!cPluginManager::CallFirstService("MainMenuHooksPatch-v1.0::osChannels", &menu))
+            menu = new cMenuChannels;
+        break;
+    case osTimers:
+        if (!cPluginManager::CallFirstService("MainMenuHooksPatch-v1.0::osTimers", &menu))
+            menu = new cMenuTimers;
+        break;
+    case osRecordings:
+        if (!cPluginManager::CallFirstService("MainMenuHooksPatch-v1.0::osRecordings", &menu))
+            menu = new cMenuRecordings(NULL, 0, OpenSubMenus);
+        break;
+    case osSetup:      menu = new cMenuSetup; break;
+    case osCommands:   menu = new cMenuCommands(tr("Commands"), &Commands); break;
     default: break;
     }
+  if (menu)
+     if (menu->IsMenu())
+        AddSubMenu((cOsdMenu *) menu);
 }
 
 cOsdObject *cMenuMain::PluginOsdObject(void)
@@ -3785,6 +3808,29 @@ void cMenuMain::Set(void)
   Clear();
   SetTitle("VDR");
   SetHasHotkeys();
+
+  if (MenuOrgPatch::IsCustomMenuAvailable()) {
+     MenuItemDefinitions* menuItems = MenuOrgPatch::MainMenuItems();
+     for (MenuItemDefinitions::iterator i = menuItems->begin(); i != menuItems->end(); i++) {
+         cOsdItem* osdItem = NULL;
+         if ((*i)->IsCustomOsdItem()) {
+            osdItem = (*i)->CustomOsdItem();
+            if (osdItem &&  !(*i)->IsSeparatorItem())
+                   osdItem->SetText(hk(osdItem->Text()));
+            }
+         else if ((*i)->IsPluginItem()) {
+            const char *item = (*i)->PluginMenuEntry();
+            if (item)
+              osdItem = new cMenuPluginItem(hk(item), (*i)->PluginIndex());
+            }
+         if (osdItem) {
+            Add(osdItem);
+            if ((*i)->IsSelected())
+               SetCurrent(osdItem);
+            }
+         }
+     }
+  else {
 
   // Basic menu items:
 
@@ -3811,6 +3857,8 @@ void cMenuMain::Set(void)
   Add(new cOsdItem(hk(tr("Setup")),      osSetup));
   if (Commands.Count())
      Add(new cOsdItem(hk(tr("Commands")),  osCommands));
+
+  }
 
   Update(true);
 
@@ -3878,13 +3926,34 @@ eOSState cMenuMain::ProcessKey(eKeys Key)
   eOSState state = cOsdMenu::ProcessKey(Key);
   HadSubMenu |= HasSubMenu();
 
+  cOsdObject *menu = NULL;
   switch (state) {
-    case osSchedule:   return AddSubMenu(new cMenuSchedule);
-    case osChannels:   return AddSubMenu(new cMenuChannels);
-    case osTimers:     return AddSubMenu(new cMenuTimers);
-    case osRecordings: return AddSubMenu(new cMenuRecordings);
-    case osSetup:      return AddSubMenu(new cMenuSetup);
-    case osCommands:   return AddSubMenu(new cMenuCommands(tr("Commands"), &Commands));
+    case osSchedule:
+        if (!cPluginManager::CallFirstService("MainMenuHooksPatch-v1.0::osSchedule", &menu))
+            menu = new cMenuSchedule;
+        else
+            state = osContinue;
+        break;
+    case osChannels:
+        if (!cPluginManager::CallFirstService("MainMenuHooksPatch-v1.0::osChannels", &menu))
+            menu = new cMenuChannels;
+        else
+            state = osContinue;
+        break;
+    case osTimers:
+        if (!cPluginManager::CallFirstService("MainMenuHooksPatch-v1.0::osTimers", &menu))
+            menu = new cMenuTimers;
+        else
+            state = osContinue;
+        break;
+    case osRecordings:
+        if (!cPluginManager::CallFirstService("MainMenuHooksPatch-v1.0::osRecordings", &menu))
+            menu = new cMenuRecordings;
+        else
+            state = osContinue;
+        break;
+    case osSetup:      menu = new cMenuSetup; break;
+    case osCommands:   menu = new cMenuCommands(tr("Commands"), &Commands); break;
     case osStopRecord: if (Interface->Confirm(tr("Stop recording?"))) {
                           cOsdItem *item = Get(Current());
                           if (item) {
@@ -3917,6 +3986,41 @@ eOSState cMenuMain::ProcessKey(eKeys Key)
                          state = osEnd;
                        }
                        break;
+    case osBack:       {
+                          if (MenuOrgPatch::IsCustomMenuAvailable())
+                          {
+                            bool leavingMenuSucceeded = MenuOrgPatch::LeaveSubMenu();
+                            Set();
+                            stopReplayItem = NULL;
+                            cancelEditingItem = NULL;
+                            stopRecordingItem = NULL;
+                            recordControlsState = 0;
+                            Update(true);
+                            Display();
+                            if (leavingMenuSucceeded)
+                              return osContinue;
+                            else
+                              return osEnd;
+                          }
+                       }
+                       break;
+    case osUser1:      {
+                          if (MenuOrgPatch::IsCustomMenuAvailable()) {
+                            MenuOrgPatch::EnterSubMenu(Get(Current()));
+                            Set();
+                            return osContinue;
+                          }
+                       }
+                       break;
+    case osUser2:      {
+                          if (MenuOrgPatch::IsCustomMenuAvailable()) {
+                            cOsdMenu* osdMenu = MenuOrgPatch::Execute(Get(Current()));
+                            if (osdMenu)
+                              return AddSubMenu(osdMenu);
+                            return osEnd;
+                          }
+                       }
+                       break;
     default: switch (Key) {
                case kRecord:
                case kRed:    if (!HadSubMenu)
@@ -3936,6 +4040,12 @@ eOSState cMenuMain::ProcessKey(eKeys Key)
                default:      break;
                }
     }
+  if (menu) {
+     if (menu->IsMenu())
+        return AddSubMenu((cOsdMenu *) menu);
+     pluginOsdObject = menu;
+     return osPlugin;
+  } 
   if (!HasSubMenu() && Update(HadSubMenu))
      Display();
   if (Key != kNone) {
@@ -4884,6 +4994,10 @@ bool cRecordControls::StateChanged(int &State)
 
 // --- cReplayControl --------------------------------------------------------
 
+#define REPLAYCONTROLSKIPLIMIT   9    // s
+#define REPLAYCONTROLSKIPSECONDS 90   // s
+#define REPLAYCONTROLSKIPTIMEOUT 5000 // ms
+
 cReplayControl *cReplayControl::currentReplayControl = NULL;
 cString cReplayControl::fileName;
 
@@ -4898,6 +5012,9 @@ cReplayControl::cReplayControl(bool PauseLive)
   lastCurrent = lastTotal = -1;
   lastPlay = lastForward = false;
   lastSpeed = -2; // an invalid value
+  lastSkipKey = kNone;
+  lastSkipSeconds = REPLAYCONTROLSKIPSECONDS;
+  lastSkipTimeout.Set(0);
   timeoutShow = 0;
   timeSearchActive = false;
   cRecording Recording(fileName);
@@ -5191,8 +5308,17 @@ void cReplayControl::MarkJump(bool Forward)
   if (GetIndex(Current, Total)) {
      if (marks.Count()) {
         if (cMark *m = Forward ? marks.GetNext(Current) : marks.GetPrev(Current)) {
-           Goto(m->Position(), true);
-           displayFrames = true;
+           bool Play2, Forward2;
+           int Speed;
+           if (Setup.JumpPlay && GetReplayMode(Play2, Forward2, Speed) &&
+               Play2 && Forward && m->Position() < Total - SecondsToFrames(3, FramesPerSecond())) {
+              Goto(m->Position());
+              Play();
+              }
+           else {
+              Goto(m->Position(), true);
+              displayFrames = true;
+              }
            return;
            }
         }
@@ -5255,7 +5381,7 @@ void cReplayControl::EditTest(void)
      if (!m)
         m = marks.GetNext(Current);
      if (m) {
-        if ((m->Index() & 0x01) != 0)
+        if ((m->Index() & 0x01) != 0 && !Setup.PlayJump)
            m = marks.Next(m);
         if (m) {
            Goto(m->Position() - SecondsToFrames(3, FramesPerSecond()));
@@ -5334,6 +5460,32 @@ eOSState cReplayControl::ProcessKey(eKeys Key)
     case kGreen:   SkipSeconds(-60); break;
     case kYellow|k_Repeat:
     case kYellow:  SkipSeconds( 60); break;
+    case k1|k_Repeat:
+    case k1:       SkipSeconds(-20); break;
+    case k3|k_Repeat:
+    case k3:       SkipSeconds( 20); break;
+    case kPrev|k_Repeat:
+    case kPrev:    if (lastSkipTimeout.TimedOut()) {
+                      lastSkipSeconds = REPLAYCONTROLSKIPSECONDS;
+                      lastSkipKey = kPrev;
+                   }
+                   else if (RAWKEY(lastSkipKey) != kPrev && lastSkipSeconds > (2 * REPLAYCONTROLSKIPLIMIT)) {
+                      lastSkipSeconds /= 2;
+                      lastSkipKey = kNone;
+                   }
+                   lastSkipTimeout.Set(REPLAYCONTROLSKIPTIMEOUT);
+                   SkipSeconds(-lastSkipSeconds); break;
+    case kNext|k_Repeat:
+    case kNext:    if (lastSkipTimeout.TimedOut()) {
+                      lastSkipSeconds = REPLAYCONTROLSKIPSECONDS;
+                      lastSkipKey = kNext;	
+                   }
+                   else if (RAWKEY(lastSkipKey) != kNext && lastSkipSeconds > (2 * REPLAYCONTROLSKIPLIMIT)) {
+                      lastSkipSeconds /= 2;
+                      lastSkipKey = kNone;
+                   }
+                   lastSkipTimeout.Set(REPLAYCONTROLSKIPTIMEOUT);
+                   SkipSeconds(lastSkipSeconds); break;
     case kStop:
     case kBlue:    Hide();
                    Stop();
@@ -5343,12 +5495,8 @@ eOSState cReplayControl::ProcessKey(eKeys Key)
       switch (int(Key)) {
         // Editing:
         case kMarkToggle:      MarkToggle(); break;
-        case kPrev|k_Repeat:
-        case kPrev:
         case kMarkJumpBack|k_Repeat:
         case kMarkJumpBack:    MarkJump(false); break;
-        case kNext|k_Repeat:
-        case kNext:
         case kMarkJumpForward|k_Repeat:
         case kMarkJumpForward: MarkJump(true); break;
         case kMarkMoveBack|k_Repeat:
