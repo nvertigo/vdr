@@ -1727,6 +1727,17 @@ void cDevice::DetachAllReceivers(void)
       Detach(receiver[i]);
 }
 
+cRecorder* cDevice::GetPreRecording(const cChannel *Channel)
+{
+  cMutexLock MutexLock(&mutexReceiver);
+  for (int i = 0; i < MAXRECEIVERS; i++) {
+      if (receiver[i])
+    	  if (receiver[i]->IsPreRecording(Channel))
+    		  return (cRecorder*)receiver[i];
+      }
+  return NULL;
+}
+
 // --- cTSBuffer -------------------------------------------------------------
 
 cTSBuffer::cTSBuffer(int File, int Size, int CardIndex)

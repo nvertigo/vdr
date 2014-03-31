@@ -24,44 +24,55 @@
 cRecorder::cRecorder(const char *FileName, const cChannel *Channel, int Priority)
 :cReceiver(Channel, Priority)
 ,cThread("recording")
+,ringBuffer(NULL), frameDetector(NULL), fileName(NULL), index(NULL), recordFile(NULL), recordingName(NULL)
 {
-  recordingName = strdup(FileName);
+	if (FileName != NULL)
+	{
+		InitializeFile(FileName, Channel);
+	}
+}
 
-  // Make sure the disk is up and running:
+void cRecorder::InitializeFile(const char *FileName, const cChannel *Channel)
+{
+	recordingName = strdup(FileName);
 
-  SpinUpDisk(FileName);
+	// Make sure the disk is up and running:
 
-  ringBuffer = new cRingBufferLinear(RECORDERBUFSIZE, MIN_TS_PACKETS_FOR_FRAME_DETECTOR * TS_SIZE, true, "Recorder");
-  ringBuffer->SetTimeouts(0, 100);
-  ringBuffer->SetIoThrottle();
+	SpinUpDisk(FileName);
 
-  int Pid = Channel->Vpid();
-  int Type = Channel->Vtype();
-  if (!Pid && Channel->Apid(0)) {
-     Pid = Channel->Apid(0);
-     Type = 0x04;
-     }
-  if (!Pid && Channel->Dpid(0)) {
-     Pid = Channel->Dpid(0);
-     Type = 0x06;
-     }
-  frameDetector = new cFrameDetector(Pid, Type);
-  index = NULL;
-  fileSize = 0;
-  lastDiskSpaceCheck = time(NULL);
-  fileName = new cFileName(FileName, true);
-  int PatVersion, PmtVersion;
-  if (fileName->GetLastPatPmtVersions(PatVersion, PmtVersion))
-     patPmtGenerator.SetVersions(PatVersion + 1, PmtVersion + 1);
-  patPmtGenerator.SetChannel(Channel);
-  recordFile = fileName->Open();
-  if (!recordFile)
-     return;
-  // Create the index file:
-  index = new cIndexFile(FileName, true);
-  if (!index)
-     esyslog("ERROR: can't allocate index");
-     // let's continue without index, so we'll at least have the recording
+	ringBuffer = new cRingBufferLinear(RECORDERBUFSIZE, MIN_TS_PACKETS_FOR_FRAME_DETECTOR * TS_SIZE, true, "Recorder");
+	ringBuffer->SetTimeouts(0, 100);
+	ringBuffer->SetIoThrottle();
+
+	int Pid = Channel->Vpid();
+	int Type = Channel->Vtype();
+	if (!Pid && Channel->Apid(0)) {
+		Pid = Channel->Apid(0);
+		Type = 0x04;
+		}
+	if (!Pid && Channel->Dpid(0)) {
+		Pid = Channel->Dpid(0);
+		Type = 0x06;
+		}
+	if (frameDetector == NULL) {
+		frameDetector = new cFrameDetector(Pid, Type);
+		}
+	index = NULL;
+	fileSize = 0;
+	lastDiskSpaceCheck = time(NULL);
+	fileName = new cFileName(FileName, true);
+	int PatVersion, PmtVersion;
+	if (fileName->GetLastPatPmtVersions(PatVersion, PmtVersion))
+		patPmtGenerator.SetVersions(PatVersion + 1, PmtVersion + 1);
+	patPmtGenerator.SetChannel(Channel);
+	recordFile = fileName->Open();
+	if (!recordFile)
+		return;
+	// Create the index file:
+	index = new cIndexFile(FileName, true);
+	if (!index)
+		esyslog("ERROR: can't allocate index");
+	// let's continue without index, so we'll at least have the recording
 }
 
 cRecorder::~cRecorder()

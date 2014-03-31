@@ -238,7 +238,7 @@ private:
   char *fileName;
   bool GetEvent(void);
 public:
-  cRecordControl(cDevice *Device, cTimer *Timer = NULL, bool Pause = false);
+  cRecordControl(cDevice *Device, cTimer *Timer = NULL, bool Pause = false, bool* reused = NULL);
   virtual ~cRecordControl();
   bool Process(time_t t);
   cDevice *Device(void) { return device; }
@@ -253,9 +253,9 @@ private:
   static cRecordControl *RecordControls[];
   static int state;
 public:
-  static bool Start(cTimer *Timer = NULL, bool Pause = false);
+  static bool Start(cTimer *Timer = NULL, bool Pause = false, bool* reused = NULL);
   static void Stop(const char *InstantId);
-  static bool PauseLiveVideo(void);
+  static bool PauseLiveVideo(bool rewind = false);
   static const char *GetInstantId(const char *LastInstantId);
   static cRecordControl *GetRecordControl(const char *FileName);
   static cRecordControl *GetRecordControl(const cTimer *Timer);
@@ -295,7 +295,7 @@ private:
   void EditCut(void);
   void EditTest(void);
 public:
-  cReplayControl(bool PauseLive = false);
+  cReplayControl(ReplayState replayState = restNormal);
   virtual ~cReplayControl();
   void Stop(void);
   virtual cOsdObject *GetInfo(void);
