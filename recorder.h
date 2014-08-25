@@ -16,8 +16,8 @@
 #include "ringbuffer.h"
 #include "thread.h"
 
-class cRecorder : public cReceiver, cThread {
-private:
+class cRecorder : public cReceiver, protected cThread {
+protected:
   cRingBufferLinear *ringBuffer;
   cFrameDetector *frameDetector;
   cPatPmtGenerator patPmtGenerator;
@@ -33,11 +33,16 @@ protected:
   virtual void Activate(bool On);
   virtual void Receive(uchar *Data, int Length);
   virtual void Action(void);
+  void InitializeFile(const char *FileName, const cChannel *Channel);
+               ///< Starts recording to file.
+               ///< Called in constructor if file name has been given.
+
 public:
   cRecorder(const char *FileName, const cChannel *Channel, int Priority);
-               // Creates a new recorder for the given Channel and
-               // the given Priority that will record into the file FileName.
+               ///< Creates a new recorder for the given Channel and
+               ///< the given Priority that will record into the file FileName.
   virtual ~cRecorder();
+
   };
 
 #endif //__RECORDER_H

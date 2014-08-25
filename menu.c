@@ -4688,7 +4688,7 @@ eOSState cDisplaySubtitleTracks::ProcessKey(eKeys Key)
 
 // --- cRecordControl --------------------------------------------------------
 
-cRecordControl::cRecordControl(cDevice *Device, cTimer *Timer, bool Pause)
+cRecordControl::cRecordControl(cDevice *Device, cTimer *Timer, bool Pause, bool* reused /* = NULL */)
 {
   // Whatever happens here, the timers will be modified in some way...
   Timers.SetModified();
@@ -4711,6 +4711,7 @@ cRecordControl::cRecordControl(cDevice *Device, cTimer *Timer, bool Pause)
   timer->SetPending(true);
   timer->SetRecording(true);
   event = timer->Event();
+  if (reused != NULL) *reused = false;
 
   if (event || GetEvent())
      dsyslog("Title: '%s' Subtitle: '%s'", event->Title(), event->ShortText());
@@ -4738,8 +4739,21 @@ cRecordControl::cRecordControl(cDevice *Device, cTimer *Timer, bool Pause)
   isyslog("record %s", fileName);
   if (MakeDirs(fileName, true)) {
      const cChannel *ch = timer->Channel();
-     recorder = new cRecorder(fileName, ch, timer->Priority());
-     if (device->AttachReceiver(recorder)) {
+
+     if (!Timer) {
+    	 recorder = device->GetPreRecording(ch);
+    	 if (recorder != NULL) {
+    		 recorder->ActivatePreRecording(fileName, timer->Priority());
+    		 if (reused != NULL) *reused = true;
+    	     }
+         }
+
+     if (recorder == NULL) {
+    	 recorder = new cRecorder(fileName, ch, timer->Priority());
+    	 if (!device->AttachReceiver(recorder)) DELETENULL(recorder);
+     	 }
+
+     if (recorder != NULL) {
         Recording.WriteInfo();
         cStatus::MsgRecording(device, Recording.Name(), Recording.FileName(), true);
         if (!Timer && !cReplayControl::LastReplayed()) // an instant recording, maybe from cRecordControls::PauseLiveVideo()
@@ -4761,8 +4775,6 @@ cRecordControl::cRecordControl(cDevice *Device, cTimer *Timer, bool Pause)
            }
         return;
         }
-     else
-        DELETENULL(recorder);
      }
   else
      timer->SetDeferred(DEFERTIMER);
@@ -4837,7 +4849,7 @@ bool cRecordControl::Process(time_t t)
 cRecordControl *cRecordControls::RecordControls[MAXRECORDCONTROLS] = { NULL };
 int cRecordControls::state = 0;
 
-bool cRecordControls::Start(cTimer *Timer, bool Pause)
+bool cRecordControls::Start(cTimer *Timer, bool Pause, bool* reused)
 {
   static time_t LastNoDiskSpaceMessage = 0;
   int FreeMB = 0;
@@ -4872,7 +4884,7 @@ bool cRecordControls::Start(cTimer *Timer, bool Pause)
         if (!Timer || Timer->Matches()) {
            for (int i = 0; i < MAXRECORDCONTROLS; i++) {
                if (!RecordControls[i]) {
-                  RecordControls[i] = new cRecordControl(device, Timer, Pause);
+                  RecordControls[i] = new cRecordControl(device, Timer, Pause, reused);
                   return RecordControls[i]->Process(time(NULL));
                   }
                }
@@ -4908,12 +4920,13 @@ void cRecordControls::Stop(const char *InstantId)
       }
 }
 
-bool cRecordControls::PauseLiveVideo(void)
+bool cRecordControls::PauseLiveVideo(bool rewind /* = false */)
 {
   Skins.Message(mtStatus, tr("Pausing live video..."));
+  bool reused = false;
   cReplayControl::SetRecording(NULL); // make sure the new cRecordControl will set cReplayControl::LastReplayed()
-  if (Start(NULL, true)) {
-     cReplayControl *rc = new cReplayControl(true);
+  if (Start(NULL, true, &reused)) {
+     cReplayControl *rc = new cReplayControl(rewind? restReuseRewind : reused? restReusePause : restPauseLive);
      cControl::Launch(rc);
      cControl::Attach();
      Skins.Message(mtStatus, NULL);
@@ -5018,10 +5031,10 @@ bool cRecordControls::StateChanged(int &State)
 cReplayControl *cReplayControl::currentReplayControl = NULL;
 cString cReplayControl::fileName;
 
-cReplayControl::cReplayControl(bool PauseLive)
-:cDvbPlayerControl(fileName, PauseLive)
+cReplayControl::cReplayControl(ReplayState replayState /* = Normal */)
+:cDvbPlayerControl(fileName, replayState)
 {
-  cDevice::PrimaryDevice()->SetKeepTracks(PauseLive);
+  cDevice::PrimaryDevice()->SetKeepTracks(replayState == restPauseLive);
   currentReplayControl = this;
   displayReplay = NULL;
   marksModified = false;
