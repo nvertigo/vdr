@@ -92,6 +92,7 @@ struct tTrackId {
 
 class cPlayer;
 class cReceiver;
+class cRecorder;
 class cLiveSubtitle;
 
 class cDeviceHook : public cListObject {
@@ -821,6 +822,8 @@ public:
        ///< Detaches all receivers from this device for this pid.
   virtual void DetachAllReceivers(void);
        ///< Detaches all receivers from this device.
+  cRecorder* GetPreRecording(const cChannel *Channel);
+
   };
 
 /// Derived cDevice classes that can receive channels will have to provide
