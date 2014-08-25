@@ -16,11 +16,19 @@
 
 class cDvbPlayer;
 
+enum ReplayState
+{
+	restNormal,
+	restPauseLive,
+	restReusePause,
+	restReuseRewind
+};
+
 class cDvbPlayerControl : public cControl {
 private:
   cDvbPlayer *player;
 public:
-  cDvbPlayerControl(const char *FileName, bool PauseLive = false);
+  cDvbPlayerControl(const char *FileName, ReplayState replayState = restNormal);
        // Sets up a player for the given file.
        // If PauseLive is true, special care is taken to make sure the index
        // file of the recording is long enough to allow the player to display
