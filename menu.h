@@ -279,6 +279,9 @@ private:
   int lastCurrent, lastTotal;
   bool lastPlay, lastForward;
   int lastSpeed;
+  int lastSkipSeconds;
+  eKeys lastSkipKey;
+  cTimeMs lastSkipTimeout;
   time_t timeoutShow;
   bool timeSearchActive, timeSearchHide;
   int timeSearchTime, timeSearchPos;
