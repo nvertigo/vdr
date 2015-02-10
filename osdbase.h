@@ -99,6 +99,8 @@ private:
   char *status;
   int digit;
   bool hasHotkeys;
+  int key_nr;
+  cTimeMs lastActivity;
   void DisplayHelp(bool Force = false);
 protected:
   void SetDisplayMenu(void);
