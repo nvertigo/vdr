@@ -87,6 +87,7 @@ private:
   int duration;            // Duration of this event in seconds
   time_t vps;              // Video Programming Service timestamp (VPS, aka "Programme Identification Label", PIL)
   time_t seen;             // When this event was last seen in the data stream
+  char *aux;
 public:
   cEvent(tEventID EventID);
   ~cEvent();
@@ -109,6 +110,7 @@ public:
   time_t Vps(void) const { return vps; }
   time_t Seen(void) const { return seen; }
   bool SeenWithin(int Seconds) const { return time(NULL) - seen < Seconds; }
+  const char *Aux(void) const { return aux; }
   bool HasTimer(void) const;
   bool IsRunning(bool OrAboutToStart = false) const;
   static const char *ContentToString(uchar Content);
@@ -131,6 +133,7 @@ public:
   void SetDuration(int Duration);
   void SetVps(time_t Vps);
   void SetSeen(void);
+  void SetAux(const char *Aux);
   cString ToDescr(void) const;
   void Dump(FILE *f, const char *Prefix = "", bool InfoOnly = false) const;
   bool Parse(char *s);
