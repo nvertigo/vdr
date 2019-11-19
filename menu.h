@@ -283,6 +283,8 @@ private:
   int level;
   cStateKey recordingsStateKey;
   int helpKeys;
+  bool delRecMenu;
+  bool deletedRec;
   const cRecordingFilter *filter;
   static cString path;
   static cString fileName;
@@ -292,13 +294,15 @@ private:
   eOSState Play(void);
   eOSState Rewind(void);
   eOSState Delete(void);
+  eOSState Undelete(void);
+  eOSState Erase(void);
   eOSState Info(void);
   eOSState Sort(void);
   eOSState Commands(eKeys Key = kNone);
 protected:
   cString DirectoryName(void);
 public:
-  cMenuRecordings(const char *Base = NULL, int Level = 0, bool OpenSubMenus = false, const cRecordingFilter *Filter = NULL);
+  cMenuRecordings(const char *Base = NULL, int Level = 0, bool OpenSubMenus = false, const cRecordingFilter *Filter = NULL, bool DelRecMenu = false);
   ~cMenuRecordings();
   virtual eOSState ProcessKey(eKeys Key);
   static void SetPath(const char *Path);
