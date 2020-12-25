@@ -119,28 +119,100 @@ public:
 
 class cDisplayChannel : public cOsdObject {
 private:
-  cSkinDisplayChannel *displayChannel;
   int group;
   bool withInfo;
-  cTimeMs lastTime;
-  int number;
   bool timeout;
-  int osdState;
   const cPositioner *positioner;
-  const cChannel *channel;
   const cEvent *lastPresent;
   const cEvent *lastFollowing;
   static cDisplayChannel *currentDisplayChannel;
-  void DisplayChannel(void);
-  void DisplayInfo(void);
   void Refresh(void);
   const cChannel *NextAvailableChannel(const cChannel *Channel, int Direction);
+protected:
+  cSkinDisplayChannel *displayChannel;
+  cTimeMs lastTime;
+  int number;
+  const cChannel *channel;
+  int osdState;
+  void DisplayChannel(void);
+  void DisplayInfo(void);
 public:
   cDisplayChannel(int Number, bool Switched);
-  cDisplayChannel(eKeys FirstKey);
+  cDisplayChannel(eKeys FirstKey, bool processKey = true);
   virtual ~cDisplayChannel();
   virtual eOSState ProcessKey(eKeys Key);
   static bool IsOpen(void) { return currentDisplayChannel != NULL; }
+  };
+
+enum eExtendedState {
+  esInit = 0,
+  esDefault,
+  esChannelInfo,
+  esChannelList,
+  esChannelListInfo,
+  esGroupsList,
+  esGroupsChannelList,
+  esGroupsChannelListInfo,
+  esClose
+  };
+
+class cChannelListItem : public cListObject {
+private:
+  const cChannel *channel;
+public:
+  cChannelListItem(const cChannel *Channel) { channel = Channel; };
+  virtual ~cChannelListItem(void) { };
+  const cChannel *Channel(void) { return channel; }
+  };
+
+class cGroupListItem : public cListObject {
+private:
+  const cChannel *channel;
+  int numChannels;
+public:
+  cGroupListItem(const cChannel *Channel) { channel = Channel; numChannels = 0; };
+  virtual ~cGroupListItem(void) { };
+  const char *GroupName(void);
+  void SetNumChannels(int NumChannels) { numChannels = NumChannels; };
+  int NumChannels(void) { return numChannels; };
+  const cChannel *Channel(void) { return channel; }
+  };
+
+class cDisplayChannelExtended : public cDisplayChannel {
+private:
+  eExtendedState state;
+  int keyRightOpensChannellist;
+  int numItemsChannel, startChannel, currentChannel;
+  int numItemsGroup, startGroup, currentGroup;
+  cList<cChannelListItem> channellist;
+  cList<cGroupListItem> grouplist;
+  void StateNumberKey(int key, cSkinDisplayChannelExtended *dcExt);
+  bool StateInit(int key, cSkinDisplayChannelExtended *dcExt);
+  bool StateDefault(int key, cSkinDisplayChannelExtended *dcExt);
+  bool StateChannelInfo(int key, cSkinDisplayChannelExtended *dcExt);
+  bool StateChannelList(int key, cSkinDisplayChannelExtended *dcExt);
+  bool StateGroupList(int key, cSkinDisplayChannelExtended *dcExt);
+  bool StateGroupChannelList(int key, cSkinDisplayChannelExtended *dcExt);
+  void ShowChannellistInfo(cSkinDisplayChannelExtended *dcExt, eDisplaychannelView newViewType);
+  void InitChannelList(cSkinDisplayChannelExtended *dcExt);
+  void SetChannelList(void);
+  int GetIndexChannel(const cChannel *c);
+  void InitGroupList(cSkinDisplayChannelExtended *dcExt);
+  void SetGroupList(void);
+  int GetIndexGroup(const cChannel *c);
+  void InitGroupChannelList(cSkinDisplayChannelExtended *dcExt);
+  void SetGroupChannelList(cSkinDisplayChannelExtended *dcExt);
+  void CursorUp(cSkinDisplayChannelExtended *dcExt);
+  void CursorDown(cSkinDisplayChannelExtended *dcExt);
+  void DisplayChannelList(cSkinDisplayChannelExtended *dcExt);
+  void DisplayGroupList(cSkinDisplayChannelExtended *dcExt);
+  bool SwitchChannel(void);
+  const cChannel *LastChannelSep(void);
+public:
+  cDisplayChannelExtended(int Number, bool Switched);
+  cDisplayChannelExtended(eKeys FirstKey);
+  virtual ~cDisplayChannelExtended();
+  virtual eOSState ProcessKey(eKeys Key);
   };
 
 class cDisplayVolume : public cOsdObject {

@@ -1087,7 +1087,7 @@ int main(int argc, char *argv[])
         // Channel display:
         if (!EITScanner.Active() && cDevice::CurrentChannel() != LastChannel) {
            if (!Menu)
-              Menu = new cDisplayChannel(cDevice::CurrentChannel(), LastChannel >= 0);
+              Menu = new cDisplayChannelExtended(cDevice::CurrentChannel(), LastChannel >= 0);
            LastChannel = cDevice::CurrentChannel();
            LastChannelChanged = Now;
            }
@@ -1299,7 +1299,8 @@ int main(int argc, char *argv[])
           case kChanDn|k_Repeat:
           case kChanDn:
                if (!Interact) {
-                  Menu = new cDisplayChannel(NORMALKEY(key));
+                  Menu = new cDisplayChannelExtended(NORMALKEY(key));
+                  Menu->ProcessKey(NORMALKEY(key));
                   continue;
                   }
                else if (cDisplayChannel::IsOpen() || Control) {
@@ -1505,7 +1506,8 @@ int main(int argc, char *argv[])
              case kUp:
              case kDown|k_Repeat:
              case kDown:
-                  Menu = new cDisplayChannel(NORMALKEY(key));
+                  Menu = new cDisplayChannelExtended(NORMALKEY(key));
+                  Menu->ProcessKey(NORMALKEY(key));
                   break;
              // Viewing Control:
              case kOk:   LastChannel = -1; break; // forces channel display

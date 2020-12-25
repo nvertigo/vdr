@@ -417,6 +417,11 @@ cSetup::cSetup(void)
   strcpy(SVDRPDefaultHost, "");
   ZapTimeout = 3;
   ChannelEntryTimeout = 1000;
+  ZapcockpitUseGroups = 1;
+  ZapcockpitUseHints = 1;
+  ZapcockpitUseInfo = 1;
+  ZapcockpitHideLastGroup = 0;
+  ZapcockpitShowAllChannels = 0;
   RcRepeatDelay = 300;
   RcRepeatDelta = 100;
   DefaultPriority = 50;
@@ -645,6 +650,11 @@ bool cSetup::Parse(const char *Name, const char *Value)
   else if (!strcasecmp(Name, "SVDRPDefaultHost"))    strn0cpy(SVDRPDefaultHost, Value, sizeof(SVDRPDefaultHost));
   else if (!strcasecmp(Name, "ZapTimeout"))          ZapTimeout         = atoi(Value);
   else if (!strcasecmp(Name, "ChannelEntryTimeout")) ChannelEntryTimeout= atoi(Value);
+  else if (!strcasecmp(Name, "ZapcockpitUseGroups")) ZapcockpitUseGroups= atoi(Value);
+  else if (!strcasecmp(Name, "ZapcockpitUseHints"))  ZapcockpitUseHints = atoi(Value);
+  else if (!strcasecmp(Name, "ZapcockpitUseInfo"))   ZapcockpitUseInfo  = atoi(Value);
+  else if (!strcasecmp(Name, "ZapcockpitHideLastGroup"))   ZapcockpitHideLastGroup   = atoi(Value);
+  else if (!strcasecmp(Name, "ZapcockpitShowAllChannels")) ZapcockpitShowAllChannels = atoi(Value);
   else if (!strcasecmp(Name, "RcRepeatDelay"))       RcRepeatDelay      = atoi(Value);
   else if (!strcasecmp(Name, "RcRepeatDelta"))       RcRepeatDelta      = atoi(Value);
   else if (!strcasecmp(Name, "DefaultPriority"))     DefaultPriority    = atoi(Value);
@@ -777,6 +787,11 @@ bool cSetup::Save(void)
   Store("SVDRPDefaultHost",   SVDRPDefaultHost);
   Store("ZapTimeout",         ZapTimeout);
   Store("ChannelEntryTimeout",ChannelEntryTimeout);
+  Store("ZapcockpitUseGroups",ZapcockpitUseGroups);
+  Store("ZapcockpitUseHints", ZapcockpitUseHints);
+  Store("ZapcockpitUseInfo",  ZapcockpitUseInfo);
+  Store("ZapcockpitHideLastGroup",   ZapcockpitHideLastGroup);
+  Store("ZapcockpitShowAllChannels", ZapcockpitShowAllChannels);
   Store("RcRepeatDelay",      RcRepeatDelay);
   Store("RcRepeatDelta",      RcRepeatDelta);
   Store("DefaultPriority",    DefaultPriority);

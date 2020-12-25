@@ -101,6 +101,34 @@ public:
   */
   };
 
+#define USE_ZAPCOCKPIT 1
+
+enum eDisplaychannelView {
+  dcDefault = 0,
+  dcChannelInfo,
+  dcChannelList,
+  dcChannelListInfo,
+  dcGroupsList,
+  dcGroupsChannelList,
+  dcGroupsChannelListInfo  
+  };
+  
+class cSkinDisplayChannelExtended : public cSkinDisplayChannel {
+private:
+public:
+  cSkinDisplayChannelExtended(void);
+  virtual void SetViewType(eDisplaychannelView ViewType) = 0;
+  virtual int MaxItems(void) = 0;
+  virtual bool KeyRightOpensChannellist(void) = 0;
+  virtual void SetChannelInfo(const cChannel *Channel) = 0;
+  virtual void SetChannelList(const cChannel *Channel, int Index, bool Current) = 0;
+  virtual void SetGroupList(const char *Group, int NumChannels, int Index, bool Current) = 0;
+  virtual void SetGroupChannelList(const cChannel *Channel, int Index, bool Current) = 0;
+  virtual void ClearList(void) = 0;
+  virtual void SetNumChannelHints(int Num) = 0;
+  virtual void SetChannelHint(const cChannel *Channel) = 0;
+};
+
 enum eMenuCategory {
   mcUndefined = -1,
   mcUnknown = 0,

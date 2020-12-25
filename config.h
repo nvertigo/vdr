@@ -293,6 +293,11 @@ public:
   char SVDRPDefaultHost[HOST_NAME_MAX];
   int ZapTimeout;
   int ChannelEntryTimeout;
+  int ZapcockpitUseGroups;
+  int ZapcockpitUseHints;
+  int ZapcockpitUseInfo;
+  int ZapcockpitHideLastGroup;
+  int ZapcockpitShowAllChannels;
   int RcRepeatDelay;
   int RcRepeatDelta;
   int DefaultPriority, DefaultLifetime;

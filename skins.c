@@ -79,6 +79,13 @@ void cSkinDisplayChannel::SetPositioner(const cPositioner *Positioner)
      SetMessage(mtInfo, cString::sprintf(tr("Moving dish to %.1f..."), double(positioner->TargetLongitude()) / 10));
 }
 
+cSkinDisplayChannelExtended::cSkinDisplayChannelExtended(void)
+: cSkinDisplayChannel()
+{
+
+}
+
+
 // --- cSkinDisplayMenu ------------------------------------------------------
 
 cSkinDisplayMenu::cSkinDisplayMenu(void)

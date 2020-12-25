@@ -1365,6 +1365,21 @@ msgstr "Mindestzeit für vorherigen Kanal (s)"
 msgid "Setup.Miscellaneous$Channel entry timeout (ms)"
 msgstr "Zeitlimit für Kanaleingabe (ms)"
 
+msgid "Setup.Miscellaneous$Zapcockpit: 2nd ok shows info"
+msgstr "Zapcockpit: zweites OK zeigt Info"
+
+msgid "Setup.Miscellaneous$Zapcockpit: Use extended channel group display"
+msgstr "Zapcockpit: Erweiterte Kanalgruppen Anzeige benutzen"
+
+msgid "Setup.Miscellaneous$Zapcockpit: Use channel hints"
+msgstr "Zapcockpit: Kanalhinweise benutzen"
+
+msgid "Setup.Miscellaneous$Zapcockpit: Hide last channel group"
+msgstr "Zapcockpit: letzte Kanalgruppe ausblenden"
+
+msgid "Setup.Miscellaneous$Zapcockpit: Show \"All Channels\" Item in Group List"
+msgstr "Zapcockpit: Zeige \"Alle Kanäle\" in Kanalgruppen Liste"
+
 msgid "Setup.Miscellaneous$Remote control repeat delay (ms)"
 msgstr "Fernbedienung Wiederholverzögerung (ms)"
 
@@ -1436,6 +1451,9 @@ msgstr "Aufzeichnung beenden?"
 
 msgid "Cancel editing?"
 msgstr "Bearbeitung abbrechen?"
+
+msgid "Setup.Miscellaneous$All Channels"
+msgstr "Alle Kanäle"
 
 msgid "No audio available!"
 msgstr "Kein Audio verfügbar!"
