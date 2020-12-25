@@ -249,13 +249,14 @@ private:
   cUnbufferedFile *replayFile;
   double framesPerSecond;
   bool isPesRecording;
-  bool pauseLive;
+  ReplayState replayState;
   bool eof;
   bool firstPacket;
   ePlayModes playMode;
   ePlayDirs playDir;
   int trickSpeed;
   int readIndex;
+  int startIndex;
   bool readIndependent;
   cFrame *readFrame;
   cFrame *playFrame;
@@ -271,6 +272,8 @@ protected:
   virtual void Action(void);
 public:
   cDvbPlayer(const char *FileName, bool PauseLive);
+  cDvbPlayer(const char *FileName, ReplayState newReplayState);
+  void Construct(const char *FileName, ReplayState newReplayState);
   virtual ~cDvbPlayer();
   void SetMarks(const cMarks *Marks);
   bool Active(void) { return cThread::Running(); }
@@ -297,6 +300,17 @@ int cDvbPlayer::Speeds[] = { 0, -2, -4, -8, 1, 2, 4, 12, 0 };
 cDvbPlayer::cDvbPlayer(const char *FileName, bool PauseLive)
 :cThread("dvbplayer")
 {
+  Construct(FileName, PauseLive? restPauseLive : restNormal);
+}
+
+cDvbPlayer::cDvbPlayer(const char *FileName, ReplayState newReplayState)
+:cThread("dvbplayer")
+{
+  Construct(FileName, newReplayState);
+}
+
+void cDvbPlayer::Construct(const char *FileName, ReplayState newReplayState)
+{  
   nonBlockingFileReader = NULL;
   ringBuffer = NULL;
   marks = NULL;
@@ -304,7 +318,8 @@ cDvbPlayer::cDvbPlayer(const char *FileName, bool PauseLive)
   cRecording Recording(FileName);
   framesPerSecond = Recording.FramesPerSecond();
   isPesRecording = Recording.IsPesRecording();
-  pauseLive = PauseLive;
+  replayState = newReplayState;
+  bool reuse = (replayState == restReusePause || replayState == restReuseRewind);
   eof = false;
   firstPacket = true;
   playMode = pmPlay;
@@ -323,15 +338,21 @@ cDvbPlayer::cDvbPlayer(const char *FileName, bool PauseLive)
      return;
   ringBuffer = new cRingBufferFrame(PLAYERBUFSIZE);
   // Create the index file:
-  index = new cIndexFile(FileName, false, isPesRecording, pauseLive);
+  index = new cIndexFile(FileName, false, isPesRecording, replayState == restPauseLive);
   if (!index)
      esyslog("ERROR: can't allocate index");
   else if (!index->Ok()) {
      delete index;
      index = NULL;
      }
-  else if (PauseLive)
+  else if (reuse)
      framesPerSecond = cRecording(FileName).FramesPerSecond(); // the fps rate might have changed from the default
+  startIndex = 0;
+  if (replayState == restReuseRewind || replayState == restReusePause) {
+     int Current, Total;
+     GetIndex(Current, Total, false);
+     startIndex = max(Total - 1, 0);
+     }     
 }
 
 cDvbPlayer::~cDvbPlayer()
@@ -481,8 +502,21 @@ void cDvbPlayer::Action(void)
   bool CutIn = false;
   bool AtLastMark = false;
 
-  if (pauseLive)
-     Goto(0, true);
+  if (replayState == restPauseLive) {
+    Goto(0, true);
+    }
+  else if (replayState == restReuseRewind || replayState == restReusePause) {
+    readIndex = startIndex;
+    Goto(readIndex, true);
+    playMode = pmPlay;
+    if (replayState == restReuseRewind) {
+    	Backward();
+        }
+    else if (replayState == restReusePause) {
+    	Pause();
+        }
+    }
+  
   while (Running()) {
         if (WaitingForData)
            WaitingForData = !nonBlockingFileReader->WaitForDataMs(3); // this keeps the CPU load low, but reacts immediately on new data
@@ -982,6 +1016,11 @@ bool cDvbPlayer::GetReplayMode(bool &Play, bool &Forward, int &Speed)
 
 cDvbPlayerControl::cDvbPlayerControl(const char *FileName, bool PauseLive)
 :cControl(player = new cDvbPlayer(FileName, PauseLive))
+{
+}
+
+cDvbPlayerControl::cDvbPlayerControl(const char *FileName, ReplayState replayState)
+:cControl(player = new cDvbPlayer(FileName, replayState))
 {
 }
 

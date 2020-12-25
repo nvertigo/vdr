@@ -85,6 +85,10 @@ public:
                ///< case the device is needed otherwise, so code that uses a cReceiver
                ///< should repeatedly check whether it is still attached, and if
                ///< it isn't, delete it (or take any other appropriate measures).
+  virtual bool IsPreRecording(const cChannel *Channel) { return false; }
+               ///< prerecords given channel; may be turned into a disc recording.
+  virtual bool ActivatePreRecording(const char* fileName, int Priority) { return false; }
+  	  	  	   ///< turn prerecording into a disc recording
   };
 
 #endif //__RECEIVER_H

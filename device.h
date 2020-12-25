@@ -85,6 +85,7 @@ struct tTrackId {
 
 class cPlayer;
 class cReceiver;
+class cRecorder;
 class cLiveSubtitle;
 
 class cDeviceHook : public cListObject {
@@ -852,6 +853,8 @@ public:
        ///< Returns true if we are currently receiving. The parameter has no meaning (for backwards compatibility only).
   bool AttachReceiver(cReceiver *Receiver);
        ///< Attaches the given receiver to this device.
+  cRecorder* GetPreRecording(const cChannel *Channel);
+       ///< Get precocious recording for the channel if there is one.
   void Detach(cReceiver *Receiver);
        ///< Detaches the given receiver from this device.
   void DetachAll(int Pid);

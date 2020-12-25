@@ -368,6 +368,25 @@ uchar *cRingBufferLinear::Get(int &Count)
   return NULL;
 }
 
+uchar *cRingBufferLinear::GetRest(int &Count)
+{
+  int Head = head;
+  if (getThreadTid <= 0)
+     getThreadTid = cThread::ThreadId();
+  int rest = Size() - tail;
+  int diff = Head - tail;
+  int cont = (diff >= 0) ? diff : Size() + diff - margin;
+  if (cont > rest)
+     cont = rest;
+  uchar *p = buffer + tail;
+  if (cont > 0) {
+     Count = gotten = cont;
+     return p;
+     }
+  WaitForGet();
+  return NULL;
+}
+
 void cRingBufferLinear::Del(int Count)
 {
   if (Count > gotten) {

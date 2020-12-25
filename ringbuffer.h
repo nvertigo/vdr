@@ -98,6 +98,12 @@ public:
     ///< The data will remain in the buffer until a call to Del() deletes it.
     ///< Returns a pointer to the data, and stores the number of bytes
     ///< actually available in Count. If the returned pointer is NULL, Count has no meaning.
+  uchar *GetRest(int &Count);
+  ///< Gets data from the ring buffer disregarding the margin.
+  ///< Might have to be called several times to get all data.
+  ///< The data will remain in the buffer until a call to Del() deletes it.
+  ///< Returns a pointer to the data, and stores the number of bytes
+  ///< actually available in Count. If the returned pointer is NULL, Count has no meaning.
   void Del(int Count);
     ///< Deletes at most Count bytes from the ring buffer.
     ///< Count must be less or equal to the number that was returned by a previous

@@ -244,6 +244,8 @@ private:
   bool GetEvent(void);
 public:
   cRecordControl(cDevice *Device, cTimers *Timers, cTimer *Timer = NULL, bool Pause = false);
+  cRecordControl(cDevice *Device, cTimers *Timers, cTimer *Timer, bool Pause, bool* reused);
+  void Construct(cDevice *Device, cTimers *Timers, cTimer *Timer, bool Pause, bool* reused);
   virtual ~cRecordControl();
   bool Process(time_t t);
   cDevice *Device(void) { return device; }
@@ -259,10 +261,12 @@ private:
   static int state;
 public:
   static bool Start(cTimers *Timers, cTimer *Timer, bool Pause = false);
+  static bool Start(cTimers *Timers, cTimer *Timer, bool Pause, bool* reused);
   static bool Start(bool Pause = false);
   static void Stop(const char *InstantId);
   static void Stop(cTimer *Timer);
   static bool PauseLiveVideo(void);
+  static bool PauseLiveVideo(bool rewind);
   static const char *GetInstantId(const char *LastInstantId);
   static cRecordControl *GetRecordControl(const char *FileName);
   static cRecordControl *GetRecordControl(const cTimer *Timer);
@@ -318,6 +322,8 @@ private:
   void EditTest(void);
 public:
   cReplayControl(bool PauseLive = false);
+  cReplayControl(ReplayState replayState);
+  void Construct(ReplayState replayState);
   virtual ~cReplayControl();
   void Stop(void);
   virtual cOsdObject *GetInfo(void);

@@ -1353,16 +1353,23 @@ int main(int argc, char *argv[])
                key = kNone;
                break;
           // Pausing live video:
+          case kFastRew:
+	      {
+        	  // test if there's a live buffer to rewind into...
+	          LOCK_CHANNELS_READ;
+        	  if (cDevice::ActualDevice()->GetPreRecording(Channels->GetByNumber(cDevice::CurrentChannel())) == NULL) {
+        		  break;
+        	      }
+	      }
+        	  // fall through to pause
           case kPlayPause:
           case kPause:
                if (!Control) {
                   DELETE_MENU;
-                  if (Setup.PauseKeyHandling) {
-                     if (Setup.PauseKeyHandling > 1 || Interface->Confirm(tr("Pause live video?"))) {
-                        if (!cRecordControls::PauseLiveVideo())
-                           Skins.QueueMessage(mtError, tr("No free DVB device to record!"));
-                        }
-                     }
+                  if (Setup.PauseKeyHandling)
+                     if (Setup.PauseKeyHandling > 1 || Interface->Confirm(tr("Pause live video?")))
+                        if (!cRecordControls::PauseLiveVideo(int(key) == kFastRew))
+                            Skins.QueueMessage(mtError, tr("No free DVB device to record!"));
                   key = kNone; // nobody else needs to see this key
                   }
                break;

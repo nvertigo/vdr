@@ -16,6 +16,14 @@
 
 class cDvbPlayer;
 
+enum ReplayState
+{
+	restNormal,
+	restPauseLive,
+	restReusePause,
+	restReuseRewind
+};
+
 class cDvbPlayerControl : public cControl {
 private:
   cDvbPlayer *player;
@@ -25,6 +33,8 @@ public:
        // If PauseLive is true, special care is taken to make sure the index
        // file of the recording is long enough to allow the player to display
        // the first frame in still picture mode.
+  cDvbPlayerControl(const char *FileName, ReplayState replayState);
+       // Sets up a player for the given file. replayState represents the initial state.
   virtual ~cDvbPlayerControl();
   void SetMarks(const cMarks *Marks);
   bool Active(void);

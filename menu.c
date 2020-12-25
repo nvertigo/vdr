@@ -5290,6 +5290,16 @@ eOSState cDisplaySubtitleTracks::ProcessKey(eKeys Key)
 
 cRecordControl::cRecordControl(cDevice *Device, cTimers *Timers, cTimer *Timer, bool Pause)
 {
+  Construct(Device, Timers, Timer, Pause, NULL);
+}
+
+cRecordControl::cRecordControl(cDevice *Device, cTimers *Timers, cTimer *Timer, bool Pause, bool* reused)
+{
+  Construct(Device, Timers, Timer, Pause, reused);
+}
+
+void cRecordControl::Construct(cDevice *Device, cTimers *Timers, cTimer *Timer, bool Pause, bool* reused)
+{
   const char *LastReplayed = cReplayControl::LastReplayed(); // must do this before locking schedules!
   // Whatever happens here, the timers will be modified in some way...
   Timers->SetModified();
@@ -5318,6 +5328,7 @@ cRecordControl::cRecordControl(cDevice *Device, cTimers *Timers, cTimer *Timer, 
   timer->SetPending(true);
   timer->SetRecording(true);
   event = timer->Event();
+  if (reused != NULL) *reused = false;
 
   if (event || GetEvent())
      dsyslog("Title: '%s' Subtitle: '%s'", event->Title(), event->ShortText());
@@ -5347,8 +5358,21 @@ cRecordControl::cRecordControl(cDevice *Device, cTimers *Timers, cTimer *Timer, 
   if (MakeDirs(fileName, true)) {
      Recording.WriteInfo(); // we write this *before* attaching the recorder to the device, to make sure the info file is present when the recorder needs to update the fps value!
      const cChannel *ch = timer->Channel();
-     recorder = new cRecorder(fileName, ch, timer->Priority());
-     if (device->AttachReceiver(recorder)) {
+
+     if (!Timer) {
+        recorder = device->GetPreRecording(ch);
+        if (recorder != NULL) {
+           recorder->ActivatePreRecording(fileName, timer->Priority());
+           if (reused != NULL) *reused = true;
+           }
+        }
+
+     if (recorder == NULL) {
+        recorder = new cRecorder(fileName, ch, timer->Priority());
+        if (!device->AttachReceiver(recorder)) DELETENULL(recorder);
+        }
+
+     if (recorder != NULL) {
         cStatus::MsgRecording(device, Recording.Name(), Recording.FileName(), true);
         if (!Timer && !LastReplayed) // an instant recording, maybe from cRecordControls::PauseLiveVideo()
            cReplayControl::SetRecording(fileName);
@@ -5358,8 +5382,6 @@ cRecordControl::cRecordControl(cDevice *Device, cTimers *Timers, cTimer *Timer, 
         Recordings->AddByName(fileName);
         return;
         }
-     else
-        DELETENULL(recorder);
      }
   else
      timer->SetDeferred(DEFERTIMER);
@@ -5430,7 +5452,7 @@ bool cRecordControl::Process(time_t t)
 cRecordControl *cRecordControls::RecordControls[MAXRECORDCONTROLS] = { NULL };
 int cRecordControls::state = 0;
 
-bool cRecordControls::Start(cTimers *Timers, cTimer *Timer, bool Pause)
+bool cRecordControls::Start(cTimers *Timers, cTimer *Timer, bool Pause, bool* reused)
 {
   static time_t LastNoDiskSpaceMessage = 0;
   int FreeMB = 0;
@@ -5468,7 +5490,7 @@ bool cRecordControls::Start(cTimers *Timers, cTimer *Timer, bool Pause)
         if (!Timer || Timer->Matches()) {
            for (int i = 0; i < MAXRECORDCONTROLS; i++) {
                if (!RecordControls[i]) {
-                  RecordControls[i] = new cRecordControl(device, Timers, Timer, Pause);
+                  RecordControls[i] = new cRecordControl(device, Timers, Timer, Pause, reused);
                   return RecordControls[i]->Process(time(NULL));
                   }
                }
@@ -5490,6 +5512,11 @@ bool cRecordControls::Start(bool Pause)
 {
   LOCK_TIMERS_WRITE;
   return Start(Timers, NULL, Pause);
+}
+
+bool cRecordControls::Start(cTimers *Timers, cTimer *Timer, bool Pause)
+{
+  return Start(Timers, Timer, Pause, NULL);
 }
 
 void cRecordControls::Stop(const char *InstantId)
@@ -5527,10 +5554,17 @@ void cRecordControls::Stop(cTimer *Timer)
 
 bool cRecordControls::PauseLiveVideo(void)
 {
+  return PauseLiveVideo(false);
+}
+
+bool cRecordControls::PauseLiveVideo(bool rewind)
+{
   Skins.Message(mtStatus, tr("Pausing live video..."));
+  bool reused = false;  
   cReplayControl::SetRecording(NULL); // make sure the new cRecordControl will set cReplayControl::LastReplayed()
-  if (Start(true)) {
-     cReplayControl *rc = new cReplayControl(true);
+  LOCK_TIMERS_WRITE;
+  if (Start(Timers, NULL, true, &reused)) {
+     cReplayControl *rc = new cReplayControl(rewind? restReuseRewind : reused? restReusePause : restPauseLive);
      cControl::Launch(rc);
      cControl::Attach();
      Skins.Message(mtStatus, NULL);
@@ -5673,7 +5707,18 @@ cString cReplayControl::fileName;
 cReplayControl::cReplayControl(bool PauseLive)
 :cDvbPlayerControl(fileName, PauseLive)
 {
-  cDevice::PrimaryDevice()->SetKeepTracks(PauseLive);
+  Construct(PauseLive? restPauseLive : restNormal);
+}
+
+cReplayControl::cReplayControl(ReplayState replayState)
+:cDvbPlayerControl(fileName, replayState)
+{
+  Construct(replayState);
+}
+
+void cReplayControl::Construct(ReplayState replayState)
+{
+  cDevice::PrimaryDevice()->SetKeepTracks(replayState == restPauseLive);
   currentReplayControl = this;
   displayReplay = NULL;
   marksModified = false;
