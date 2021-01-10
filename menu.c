@@ -32,6 +32,7 @@
 #include "timers.h"
 #include "transfer.h"
 #include "videodir.h"
+#include "menuorgpatch.h"
 
 #define MAXWAIT4EPGINFO   3 // seconds
 #define MODETIMEOUT       3 // seconds
@@ -4399,6 +4400,9 @@ cMenuMain::cMenuMain(eOSState State, bool OpenSubMenus)
   cancelEditingItem = NULL;
   stopRecordingItem = NULL;
   recordControlsState = 0;
+
+  MenuOrgPatch::EnterRootMenu();
+
   Set();
 
   // Initial submenus:
@@ -4427,6 +4431,29 @@ void cMenuMain::Set(void)
   SetTitle("VDR");
   SetHasHotkeys();
 
+  if (MenuOrgPatch::IsCustomMenuAvailable()) {
+     MenuItemDefinitions* menuItems = MenuOrgPatch::MainMenuItems();
+     for (MenuItemDefinitions::iterator i = menuItems->begin(); i != menuItems->end(); i++) {
+         cOsdItem* osdItem = NULL;
+         if ((*i)->IsCustomOsdItem()) {
+            osdItem = (*i)->CustomOsdItem();
+            if (osdItem &&  !(*i)->IsSeparatorItem())
+                   osdItem->SetText(hk(osdItem->Text()));
+            }
+         else if ((*i)->IsPluginItem()) {
+            const char *item = (*i)->PluginMenuEntry();
+            if (item)
+              osdItem = new cMenuPluginItem(hk(item), (*i)->PluginIndex());
+            }
+         if (osdItem) {
+            Add(osdItem);
+            if ((*i)->IsSelected())
+               SetCurrent(osdItem);
+            }
+         }
+     }
+  else {
+
   // Basic menu items:
 
   Add(new cOsdItem(hk(tr("Schedule")),   osSchedule));
@@ -4452,6 +4479,8 @@ void cMenuMain::Set(void)
   Add(new cOsdItem(hk(tr("Setup")),      osSetup));
   if (Commands.Count())
      Add(new cOsdItem(hk(tr("Commands")),  osCommands));
+
+  }
 
   Update(true);
 
@@ -4559,6 +4588,41 @@ eOSState cMenuMain::ProcessKey(eKeys Key)
                                }
                             }
                          state = osEnd;
+                       }
+                       break;
+    case osBack:       {
+                          if (MenuOrgPatch::IsCustomMenuAvailable())
+                          {
+                            bool leavingMenuSucceeded = MenuOrgPatch::LeaveSubMenu();
+                            Set();
+                            stopReplayItem = NULL;
+                            cancelEditingItem = NULL;
+                            stopRecordingItem = NULL;
+                            recordControlsState = 0;
+                            Update(true);
+                            Display();
+                            if (leavingMenuSucceeded)
+                              return osContinue;
+                            else
+                              return osEnd;
+                          }
+                       }
+                       break;
+    case osUser3:      {
+                          if (MenuOrgPatch::IsCustomMenuAvailable()) {
+                            MenuOrgPatch::EnterSubMenu(Get(Current()));
+                            Set();
+                            return osContinue;
+                          }
+                       }
+                       break;
+    case osUser4:      {
+                          if (MenuOrgPatch::IsCustomMenuAvailable()) {
+                            cOsdMenu* osdMenu = MenuOrgPatch::Execute(Get(Current()));
+                            if (osdMenu)
+                              return AddSubMenu(osdMenu);
+                            return osEnd;
+                          }
                        }
                        break;
     default: switch (Key) {
