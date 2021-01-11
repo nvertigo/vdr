@@ -182,6 +182,7 @@ vdr.pc:
 	@echo "apiversion=$(APIVERSION)" >> $@
 	@echo "cflags=$(CFLAGS) $(CDEFINES) $(CINCLUDES) $(HDRDIR)" >> $@
 	@echo "cxxflags=$(CXXFLAGS) $(CDEFINES) $(CINCLUDES) $(HDRDIR)" >> $@
+	@echo "ldflags=$(LDFLAGS)" >> $@
 	@echo "" >> $@
 	@echo "Name: VDR" >> $@
 	@echo "Description: Video Disk Recorder" >> $@
